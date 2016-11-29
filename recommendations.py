@@ -209,8 +209,6 @@ def getRecommendedItems(prefs, itemMatch, user) :
             totalSim.setdefault(item2, 0)
             totalSim[item2] += similarity
 
-        print totalSim
-        print scores
         # Divide each total score by total weighting to get an average
         rankings = [(score / totalSim[item], item) for item, score in scores.items()]
 
@@ -220,4 +218,19 @@ def getRecommendedItems(prefs, itemMatch, user) :
 
         return rankings
 
+def loadMovieLens(path='data/movielens') :
+    # Get moview titles
+    movies = {}
 
+    for line in open(path + '/u.item') :
+        (id , title) = line.split('|')[0 : 2]
+        movies[id] = title
+
+    # Load data
+    prefs = {}
+    for line in open(path + '/u.data') :
+        (user, movieid, rating, ts) = line.split('\t')
+        prefs.setdefault(user, {})
+        prefs[user][movies[movieid]] = float(rating)
+
+    return prefs
