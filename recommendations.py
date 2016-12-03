@@ -122,6 +122,45 @@ def topMatches(prefs, person, n = 5, similarity = sim_pearson) :
 
     return scores[0 : n]
 
+def prebuildTopMatches(prefs, n = 5, similarity = sim_pearson) :
+    topMatched = {}
+    for userA in prefs :
+        topMatched[userA] = topMatches(prefs, userA)
+
+    return topMatched
+
+def getRecommendationsFromPrebuildTopMaches(prefs, prebuildTopMatches, target) :
+    topmatched = prebuildTopMatches[target]
+    totals = {}
+    simSums = {}
+    for other in topmatched:
+        sim = other[0]
+
+        if sim <= 0 :
+            continue
+
+        person = other[1]
+        
+        for item in prefs[person] :
+            # Only score movies I haven't seen yet
+            if item not in prefs[target] or prefs[person][item] == 0 :
+                # similarity * score
+                totals.setdefault(item, 0)
+                totals[item] += prefs[person][item] * sim
+
+                # Sum of similarities
+                simSums.setdefault(item, 0)
+                simSums[item] += sim
+
+    # Create the normalized list
+    rankings = [(total / simSums[item], item) for item, total in totals.items()]
+
+    # Return the sorted list
+    rankings.sort()
+    rankings.reverse()
+
+    return rankings
+
 # Gets recommendations for a person by using a weighted average of every other user's rankings
 def getRecommendations(prefs, person, similarity = sim_pearson) :
     totals = {}
@@ -149,11 +188,11 @@ def getRecommendations(prefs, person, similarity = sim_pearson) :
         # Create the normalized list
         rankings = [(total / simSums[item], item) for item, total in totals.items()]
 
-        # Return the sorted list
-        rankings.sort()
-        rankings.reverse()
+    # Return the sorted list
+    rankings.sort()
+    rankings.reverse()
 
-        return rankings
+    return rankings
 
 def transformPrefs(prefs) :
     result = {}
