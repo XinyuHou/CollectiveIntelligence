@@ -39,7 +39,6 @@ http://www.43folders.com/feed/
 http://www.456bereastreet.com/feed.xml
 http://www.autoblog.com/rss.xml
 http://www.bloggersblog.com/rss.xml
-http://www.bloglines.com/rss/about/news
 http://www.blogmaverick.com/rss.xml
 http://www.boingboing.net/index.rdf
 http://www.buzzmachine.com/index.xml
@@ -73,7 +72,6 @@ http://www.oilman.ca/feed/
 http://www.perezhilton.com/index.xml
 http://www.plasticbag.org/index.rdf
 http://www.powazek.com/rss.xml
-http://www.problogger.net/feed/
 http://feeds.feedburner.com/QuickOnlineTips
 http://www.readwriteweb.com/rss.xml
 http://www.schneier.com/blog/index.rdf
