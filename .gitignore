@@ -1,5 +1,7 @@
 # generated files
 BlogData.txt
+BlogClust.bmp
+wordClust.bmp
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
