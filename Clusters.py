@@ -217,3 +217,12 @@ def kCluster(rows, distance = pearson, k = 4):
 
 	return bestMatches
 
+def tanimoto(v1, v2):
+	c1, c2, share = 0, 0, 0
+	for i in range(len(v1)):
+		if v1[i] != 0: c1 += 1
+		if v2[i] != 0: c2 += 1
+		if v1[i] != 0 and v2[i] != 0: share += 1
+
+	return 1.0 - (float(share) / (c2 + c2 - share))
+	
