@@ -169,3 +169,51 @@ def rotateMatrix(data):
 		newData.append(newRow)
 
 	return newData
+
+import random
+
+def kCluster(rows, distance = pearson, k = 4):
+	# Deetermine the minomum and maxmium values for each point
+	ranges = [(min([row[i] for row in rows]), max([row[i] for row in rows])) for i in range(len(rows[0]))]
+
+	# Create k randomly placed centroids
+	clusters = [[random.random() * (ranges[i][1] - ranges[i][0]) + ranges[i][0] for i in range(len(rows[0]))] for j in range(k)]
+
+	lastMatches = None
+	for t in range(100):
+		print 'Iteration %d' % t
+		bestMatches = [[] for i in range(k)]
+
+		# Find which centroid is the closest for each row
+		for j in range(len(rows)):
+			row = rows[j]
+			bestMatch = 0
+			for i in range(k):
+				d = distance(clusters[i], row)
+				if d < distance(clusters[bestMatch], row):
+					bestMatch = i
+
+			bestMatches[bestMatch].append(j)
+
+		# If the results are the same as last time this is done
+		if bestMatches == lastMatches:
+			break
+
+		lastMatches = bestMatches
+
+		# Move the centroids to the average of their members
+		for i in range(k):
+			avgs = [0.0] * len(rows[0])
+			if len(bestMatches[i]) > 0:
+				for rowId in bestMatches[i]:
+					for m in range(len(rows[rowId])):
+						avgs[m] += rows[rowId][m]
+
+				for j in range(len(avgs)):
+					avgs[j] /= len(bestMatches[i])
+
+				clusters[i] = avgs
+
+
+	return bestMatches
+
