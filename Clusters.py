@@ -36,7 +36,7 @@ def pearson(v1, v2):
 
 	return 1.0 - num / den
 
-class bicluster:
+class biCluster:
 	def __init__(self, vec, left = None, right = None, distance = 0.0, id = None):
 		self.left = left
 		self.right = right
@@ -44,11 +44,11 @@ class bicluster:
 		self.id = id
 		self.distance = distance
 
-def hcluster(rows, distance = pearson):
+def hCluster(rows, distance = pearson):
 	distances = {}
 	currentClustId = -1
 
-	clust = [bicluster(rows[i], id = i) for i in range(len(rows))]
+	clust = [biCluster(rows[i], id = i) for i in range(len(rows))]
 
 	while len(clust) > 1:
 		lowestPair = (0, 1)
@@ -74,7 +74,7 @@ def hcluster(rows, distance = pearson):
 		]
 
 		# Create the new cluster
-		newCluster = bicluster(mergeVec, left = clust[lowestPair[0]],
+		newCluster = biCluster(mergeVec, left = clust[lowestPair[0]],
 							right = clust[lowestPair[1]],
 							distance = closest, id = currentClustId)
 
