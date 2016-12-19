@@ -287,3 +287,10 @@ def draw2D(data, labels, bmp='MultDimen2D.bmp'):
 		draw.text((x, y), labels[i], (0, 0, 0))
 
 	img.save(bmp)
+
+def manhattan(v1, v2):
+
+	r = sum([abs(v1[i] - v2[i]) for i in range(len(v1))])
+
+	return r
+
