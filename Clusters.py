@@ -343,3 +343,13 @@ def kClusterWithTotalDistance(rows, distance = pearson, k = 4):
 
 	return bestMatches, totalDistances
 
+def kClusterTotalDistanceTest(data, distance = pearson, maxK = 100):
+	sumDistances = [0.0 for i in range(maxK)]
+
+	for i in range(maxK):
+		print 'Test k = %d' % (i + 1)
+		bestMatches, totalDistances = kClusterWithTotalDistance(data, distance, i + 1)
+		sumDistances[i] = sum(totalDistances[i] for i in range(len(totalDistances)))
+
+	return sumDistances
+
