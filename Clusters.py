@@ -226,8 +226,8 @@ def tanimoto(v1, v2):
 
 	return 1.0 - (float(share) / (c2 + c2 - share))
 
-# Multidimentional scaling
-def scaleDown(data, distance = pearson, rate = 0.01):
+# 2D scaling
+def scaleDown2D(data, distance = pearson, rate = 0.01):
 	n = len(data)
 
 	# The real distances between every pair of items
@@ -353,3 +353,61 @@ def kClusterTotalDistanceTest(data, distance = pearson, maxK = 100):
 
 	return sumDistances
 
+# 1D scaling
+def scaleDown1D(data, distance = pearson, rate = 0.01):
+	n = len(data)
+
+	# The real distances between every pair of items
+	realDist = [[distance(data[i], data[j]) for j in range(n)] for i in range(0, n)]
+	outerSum = 0.0
+
+	# Randomly initialize the starting points of the locations in 2D
+	loc = [random.random() for i in range(n)]
+	fakeDist = [[0.0 for j in range(n)] for i in range(n)]
+
+	lastError = None
+	for m in range(0, 1000):
+		# Find projected distances
+		for i in range(n):
+			for j in range(n):
+				fakeDist[i][j] = abs(loc[i] - loc[j])
+
+		# Move points
+		grad = [0.0 for i in range(n)]
+
+		totalError = 0
+		for k in range(n):
+			for j in range(n):
+				if k == j: continue
+				# The error is percent difference between the distances
+				errorTerm = 0
+				if realDist[j][k] == 0:
+					errorTerm = 0
+				else:
+					errorTerm = (fakeDist[j][k] - realDist[j][k]) / realDist[j][k]
+
+				# Each point needs to be moved away from or towards the other point in proportion to thow much error it has
+				grad[k] += ((loc[k] - loc[j]) / fakeDist[j][k]) * errorTerm
+
+				totalError += abs(errorTerm)
+
+		print totalError
+
+		# If the answer got worse by moving the points we are done
+		if lastError and lastError < totalError: break
+		lastError = totalError
+
+		# Move each of the points by the learning rate times the gradient
+		for k in range(n):
+			loc[k] -= rate * grad[k]
+
+	return loc
+
+def draw1D(data, labels, bmp='MultDimen1D.bmp'):
+	img = Image.new('RGB', (2000, 100), (255, 255, 255))
+	draw = ImageDraw.Draw(img)
+	for i in range(len(data)):
+		x = (data[i] + 0.5) * 1000
+		draw.text((x, 33), labels[i], (0, 0, 0))
+
+	img.save(bmp)
