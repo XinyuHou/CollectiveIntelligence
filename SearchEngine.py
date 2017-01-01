@@ -19,11 +19,38 @@ class Crawler:
 
 	#Auxilliary function for getting an entry id and adding it if ti's not present
 	def getEntryId(self, table, field, value, createNew = True):
-		return None
+		cur = self.db.execute("select rowid from %s where %s = '%s'" % (table, field, value))
+
+		res = cur.fetchone()
+
+		if res == None:
+			cur = self.db.execute("insert into %s (%s) values ('%s')" % (table, field, value))
+			return cur.lastrowid
+		else:
+			return res[0]
 
 	# Index an individual page
 	def addToIndex(self, url, soup):
-		print 'Indexing %s' % url
+		if self.isIndexed(url):
+			return
+
+		print 'Indexing ' + url
+
+		# Get the individual words
+		text = self.getTextOnly(soup)
+		words = self.separateWords(text)
+
+		# Get the URL id
+		urlId = self.getEntryId('UrlList', 'url', url)
+
+		# Link each word to this url
+		for i in range(len(words)):
+			word = words[i]
+			
+			if word in ignoreWords: continue
+
+			wordId = self.getEntryId('WordList', 'word', word)
+			self.db.execute("insert into WordLocation(urlId, wordId, location) values (%d,%d,%d)" % (urlId, wordId, i))
 
 	# Extract the text from an HTML page (no tags)
 	def getTextOnly(self, soup):
@@ -40,7 +67,7 @@ class Crawler:
 			return resultText
 
 		else:
-			return v.strip()
+			return str.strip()
 
 	# Separate the words by any non-whitespace character
 	def separateWords(self, text):
@@ -49,21 +76,37 @@ class Crawler:
 
 	# Return true if this url is already indexed
 	def isIndexed(self, url):
+		u = self.db.execute("select rowid from UrlList where url = '%s'" % url).fetchone()
+
+		if u != None:
+			# Check if it has actually been crawled
+			v = self.db.execute("select * from WordLocation where urlId = %d" % u[0]).fetchone()
+			if v != None:
+				return True
+
+
 		return False
 
 	# Add a link between two pages
 	def addLinkRef(self, urlFrom, urlTo, linkText):
-		pass
+		words = self.separateWords(linkText)
+		fromId = self.getEntryId('UrlList', 'url', urlFrom)
+		toId = self.getEntryId('UrlList', 'url', urlTo)
+
+		if fromId == toId: return
+
+		cur = self.db.execute("insert into Link(fromId, toId) values (%d, %d)" % (fromId, toId))
+
+		linkId = cur.lastrowid
+
+		for word in words:
+			if word in ignoreWords: continue
+
+			wordId = self.getEntryId('WordList', 'word', word)
+
+			self.db.execute("insert into LinkWords(linkId, wordId) values (%d, %d)" % (linkId, wordId))
 
 	# Starting with a list of pages, do a breadth first search to the given depth, indexing pages as we go
-	def crawl(self, pages, depth = 2):
-		pass
-
-	# Create the database tables
-	def createIndexTables(self):
-		pass
-
-	# Crawl pages
 	def crawl(self, pages, depth = 1):
 		# breadth first search
 		for i in range(depth):
@@ -104,12 +147,12 @@ class Crawler:
 			pages = newPages
 
 
-	# Prepare data base table
+	# Create the database tables
 	def createIndexTables(self):
 		self.db.execute('create table UrlList(url)')
 		self.db.execute('create table WordList(word)')
 		self.db.execute('create table WordLocation(urlId, wordId, location)')
-		self.db.execute('create table link(fromId integer, toId integer)')
+		self.db.execute('create table Link(fromId integer, toId integer)')
 		self.db.execute('create table LinkWords(wordId, linkId)')
 
 		self.db.execute('create index WordIndex on WordList(word)')
