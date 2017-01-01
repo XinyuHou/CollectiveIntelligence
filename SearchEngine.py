@@ -1,3 +1,4 @@
+import re
 import urllib2
 import sqlite3 as sqlite
 from bs4 import BeautifulSoup
