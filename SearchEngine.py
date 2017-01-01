@@ -7,6 +7,7 @@ from urlparse import urljoin
 # A list of words to ignore
 ignoreWords = set(['the', 'of', 'to', 'and', 'a', 'in', 'is', 'it'])
 
+# Clawering part
 class Crawler:
 	def __init__(self, dbName):
 		self.db = sqlite.connect(dbName)
@@ -162,3 +163,11 @@ class Crawler:
 		self.db.execute('create index UrlFromIndex on link(fromId)')
 
 		self.dbCommit()
+
+# Querying part
+class Searcher:
+	def __init__(self, dbName):
+		self.db = sqlite.connect(dbName)
+
+	def __del__(self):
+		self.db.close()
