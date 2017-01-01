@@ -89,5 +89,18 @@ class Crawler:
 			pages = newPages
 
 
+	# Prepare data base table
+	def createIndexTables(self):
+		self.db.execute('create table UrlList(url)')
+		self.db.execute('create table WordList(word)')
+		self.db.execute('create table WordLocation(urlId, wordId, location)')
+		self.db.execute('create table link(fromId integer, toId integer)')
+		self.db.execute('create table LinkWords(wordId, linkId)')
 
+		self.db.execute('create index WordIndex on WordList(word)')
+		self.db.execute('create index UrlIndex on UrlList(url)')
+		self.db.execute('create index WordUrlIndex on WordLocation(wordId)')
+		self.db.execute('create index UrlToIndex on link(toId)')
+		self.db.execute('create index UrlFromIndex on link(fromId)')
 
+		self.dbCommit()
