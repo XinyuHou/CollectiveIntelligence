@@ -26,11 +26,25 @@ class Crawler:
 
 	# Extract the text from an HTML page (no tags)
 	def getTextOnly(self, soup):
-		return None
+		str = soup.string
+
+		if str == None:
+			c = soup.contents
+			resultText = ''
+
+			for t in c:
+				subText = self.getTextOnly(t)
+				resultText += subText + '\n'
+
+			return resultText
+
+		else:
+			return v.strip()
 
 	# Separate the words by any non-whitespace character
 	def separateWords(self, text):
-		return None
+		splitter = re.compile('\\W*')
+		return [s.lower() for s in splitter.split(text) if s != '']
 
 	# Return true if this url is already indexed
 	def isIndexed(self, url):
