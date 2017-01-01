@@ -1,9 +1,19 @@
+import urllib2
+from bs4 import BeautifulSoup
+from urlparse import urljoin
+
+# A list of words to ignore
+ignoreWords = set(['the', 'of', 'to', 'and', 'a', 'in', 'is', 'it'])
+
 class Crawler:
 	def __init__(self, dbName):
+		pass
 
 	def __del__(self):
+		pass
 
 	def dbCommit(self):
+		pass
 
 	#Auxilliary function for getting an entry id and adding it if ti's not present
 	def getEntryId(self, table, field, value, createNew = True):
@@ -27,12 +37,56 @@ class Crawler:
 
 	# Add a link between two pages
 	def addLinkRef(self, urlFrom, urlTo, linkText):
-
+		pass
 
 	# Starting with a list of pages, do a breadth first search to the given depth, indexing pages as we go
 	def crawl(self, pages, depth = 2):
-
+		pass
 
 	# Create the database tables
 	def createIndexTables(self):
-		
+		pass
+
+	# Crawl pages
+	def crawl(self, pages, depth = 1):
+		# breadth first search
+		for i in range(depth):
+			newPages = set()
+			for page in pages:
+				try:
+					c = urllib2.urlopen(page)
+				except:
+					print "Could not open %s" % page
+					continue
+				soup = BeautifulSoup(c.read())
+				self.addToIndex(page, soup)
+
+				links = soup('a')
+				for link in links:
+					if ('href' in dict(link.attrs)):
+						print 'link hrep: ' + link['href']
+						url = urljoin(page, link['href'])
+						print 'url: ' + url
+
+						if url.find("'") != -1: continue
+
+						# Remove location part
+						url = url.split('#')[0]
+						print 'url without location: ' + url
+
+						if url[0:4] == 'http' and not self.isIndexed(url):
+							newPages.add(url)
+
+						linkText = self.getTextOnly(link)
+						#print 'link text: ' + linkText
+
+						self.addLinkRef(page, url, linkText)
+						print '=========='
+
+				self.dbCommit()
+
+			pages = newPages
+
+
+
+
