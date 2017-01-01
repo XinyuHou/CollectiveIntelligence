@@ -1,4 +1,5 @@
 import urllib2
+import sqlite3 as sqlite
 from bs4 import BeautifulSoup
 from urlparse import urljoin
 
@@ -7,13 +8,13 @@ ignoreWords = set(['the', 'of', 'to', 'and', 'a', 'in', 'is', 'it'])
 
 class Crawler:
 	def __init__(self, dbName):
-		pass
+		self.db = sqlite.connect(dbName)
 
 	def __del__(self):
-		pass
+		self.db.close()
 
 	def dbCommit(self):
-		pass
+		self.db.commit()
 
 	#Auxilliary function for getting an entry id and adding it if ti's not present
 	def getEntryId(self, table, field, value, createNew = True):
