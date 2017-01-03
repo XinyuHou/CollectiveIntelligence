@@ -108,7 +108,7 @@ class Crawler:
 			self.db.execute("insert into LinkWords(linkId, wordId) values (%d, %d)" % (linkId, wordId))
 
 	# Starting with a list of pages, do a breadth first search to the given depth, indexing pages as we go
-	def crawl(self, pages, depth = 1):
+	def crawl(self, pages, depth = 2):
 		# breadth first search
 		for i in range(depth):
 			newPages = set()
@@ -210,7 +210,7 @@ class Searcher:
 	def getScoreList(self, rows, wordIds):
 		totalScores = dict([(row[0], 0) for row in rows])
 
-		weights = []
+		weights = [(1.0, self.frequencyScore(rows))]
 
 		for (weight, scores) in weights:
 			for url in totalScores:
@@ -244,4 +244,10 @@ class Searcher:
 				maxScore = vSmall
 			# 2, 3, 5
 			#0.4, 0.6, 1
-			return dic([(u, float(c) / maxScore) for (u, c) in scores.items()])
+			return dict([(u, float(c) / maxScore) for (u, c) in scores.items()])
+
+	def frequencyScore(self, rows):
+		counts = dict([(row[0], 0) for row in rows])
+		for row in rows:
+			counts[row[0]] += 1
+		return self.normalizeScores(counts)
