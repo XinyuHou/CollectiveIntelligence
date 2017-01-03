@@ -278,3 +278,8 @@ class Searcher:
 				minDistance[row[0]] = dist
 
 		return self.normalizeScores(minDistance, smallIsBetter = 1)
+
+	def inboundLinkScore(self, rows):
+		uniqueUrls = set([row[0] for row in rows])
+		inboundCount = dict([(u, self.db.execute('select count(*) from Link where toId = %d' % u).fetchone()[0]) for u in uniqueUrls])
+		return self.normalizeScores(inboundCount)
