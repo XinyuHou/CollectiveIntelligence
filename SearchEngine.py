@@ -227,3 +227,21 @@ class Searcher:
 		rankedScores = sorted([(score, url) for (url, score) in scores.items()], reverse = 1)
 		for (score, urlId) in rankedScores[0:10]:
 			print '%f\t%s' % (score, self.getUrlName(urlId))
+
+	def normalizeScores(self, scores, smallIsBetter = 0):
+		# Avoid division by zero errors
+		vSmall = 0.00001
+
+		if smallIsBetter:
+			minScore = min(scores.values())
+			# 2, 3, 5
+			# 1, 0.66, 0.4
+			return dict([(u, float(minScore) / max(vSmall, l)) for (u, l) in scores.items()])
+
+		else:
+			maxScore = max(scores.values())
+			if maxScore == 0:
+				maxScore = vSmall
+			# 2, 3, 5
+			#0.4, 0.6, 1
+			return dic([(u, float(c) / maxScore) for (u, c) in scores.items()])
