@@ -262,6 +262,8 @@ class Searcher:
 		for (score, urlId) in rankedScores[0:10]:
 			print '%f\t%s' % (score, self.getUrlName(urlId))
 
+		return wordIds, [r[1] for r in rankedScores[0:10]]
+
 	def normalizeScores(self, scores, smallIsBetter = 0):
 		# Avoid division by zero errors
 		vSmall = 0.00001
