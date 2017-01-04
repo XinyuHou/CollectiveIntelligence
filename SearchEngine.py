@@ -243,7 +243,8 @@ class Searcher:
 		weights = [(1.0, self.frequencyScore(rows)),
 				   	(1.0, self.locationScore(rows)),
 				   	(1.0, self.distanceScore(rows)),
-				   	(1.0, self.pageRankScore(rows))]
+				   	(1.0, self.pageRankScore(rows)),
+				   	(1.0, self.linkTextScore(rows, wordIds))]
 
 		for (weight, scores) in weights:
 			for url in totalScores:
@@ -319,5 +320,22 @@ class Searcher:
 		pageRanks = dict([(row[0], self.db.execute('select score from PageRank where urlId = %d' % row[0]).fetchone()[0]) for row in rows])
 		maxRank = max(pageRanks.values())
 		normalizeScores = dict([(u, float(l) / maxRank) for (u, l) in pageRanks.items()])
+
+		return normalizeScores
+
+	def linkTextScore(self, rows, wordIds):
+		linksScores = dict([(row[0], 0) for row in rows])
+		for wordId in wordIds:
+			cur = self.db.execute('select Link.fromId, Link.toId from LinkWords, Link where wordId = %d and LinkWords.linkId = Link.rowid' % wordId)
+
+			for (fromId, toId) in cur:
+				if toId in linksScores:
+					pr = self.db.execute('select score from PageRank where urlId = %d' % fromId).fetchone()[0]
+					linksScores[toId] += pr
+
+
+		maxScore = max(linksScores.values())
+		if maxScore == 0: maxScore = 1
+		normalizeScores = dict([(u, float(l) / maxScore) for (u, l) in linksScores.items()])
 
 		return normalizeScores
