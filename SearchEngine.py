@@ -1,9 +1,11 @@
 import re
 import urllib2
 import sqlite3 as sqlite
+import NeuraNetwork
 from bs4 import BeautifulSoup
 from urlparse import urljoin
 
+sn = NeuraNetwork.SearchNet('NeuraNetwork.db')
 # A list of words to ignore
 ignoreWords = set(['the', 'of', 'to', 'and', 'a', 'in', 'is', 'it'])
 
@@ -244,6 +246,7 @@ class Searcher:
 				   	(1.0, self.locationScore(rows)),
 				   	(1.0, self.distanceScore(rows)),
 				   	(1.0, self.pageRankScore(rows)),
+				  # (1.0, self.neuralNetworkScore(rows, wordIds)),
 				   	(1.0, self.linkTextScore(rows, wordIds))]
 
 		for (weight, scores) in weights:
@@ -341,3 +344,14 @@ class Searcher:
 		normalizeScores = dict([(u, float(l) / maxScore) for (u, l) in linksScores.items()])
 
 		return normalizeScores
+
+	def neuralNetworkScore(self, rows, wordIds):
+		# Get unique URL IDs as an ordered list
+		urlIds = [urlId for urlId in set([row[0] for row in rows])]
+
+		nnRes = sn.getResult(wordIds, urlIds)
+
+		scores = dict([(urlIds[i], nnRes[i]) for i in range(len(urlIds))])
+
+		return self.normalizeScores(scores)
+
