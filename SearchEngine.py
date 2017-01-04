@@ -164,6 +164,36 @@ class Crawler:
 
 		self.dbCommit()
 
+	def calculatePageRank(self, iterations = 20):
+		# clear out the current PageRank tables
+		self.db.execute('drop table if exists PageRank')
+		self.db.execute('create table PageRank(urlId primary key, score)')
+
+		# Initialize every url with a PageRank of 1
+		self.db.execute('insert into PageRank select rowid, 1.0 from UrlList') 
+
+		self.dbCommit()
+
+		for i in range(iterations):
+			print "Iteration %d" % (i)
+
+			for (urlId,) in self.db.execute('select rowid from UrlList'):
+				pr = 0.15
+
+				# Loop through all the pages that link to this one
+				for (linker,) in self.db.execute('select distinct fromId from Link where toId = %d' % urlId):
+					# Get the PageRank of the linker
+					linkingPR = self.db.execute('select score from PageRank where urlId = %d' % linker).fetchone()[0]
+
+					# Get the total number of links from the linker
+					linkingCount = self.db.execute('select count(*) from Link where fromId = %d' % linker).fetchone()[0]
+
+					pr += 0.85 * (linkingPR / linkingCount)
+
+				self.db.execute('update PageRank set score = %f where urlId = %d' % (pr, urlId))
+
+			self.dbCommit()
+
 # Querying part
 class Searcher:
 	def __init__(self, dbName):
@@ -212,7 +242,8 @@ class Searcher:
 
 		weights = [(1.0, self.frequencyScore(rows)),
 				   	(1.0, self.locationScore(rows)),
-				   	(1.0, self.distanceScore(rows)),]
+				   	(1.0, self.distanceScore(rows)),
+				   	(1.0, self.pageRankScore(rows))]
 
 		for (weight, scores) in weights:
 			for url in totalScores:
@@ -283,3 +314,10 @@ class Searcher:
 		uniqueUrls = set([row[0] for row in rows])
 		inboundCount = dict([(u, self.db.execute('select count(*) from Link where toId = %d' % u).fetchone()[0]) for u in uniqueUrls])
 		return self.normalizeScores(inboundCount)
+
+	def pageRankScore(self, rows):
+		pageRanks = dict([(row[0], self.db.execute('select score from PageRank where urlId = %d' % row[0]).fetchone()[0]) for row in rows])
+		maxRank = max(pageRanks.values())
+		normalizeScores = dict([(u, float(l) / maxRank) for (u, l) in pageRanks.items()])
+
+		return normalizeScores
