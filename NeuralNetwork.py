@@ -1,6 +1,9 @@
 from math import tanh
 import sqlite3 as sqlite
 
+def dtanh(y):
+	return 1.0 - y * y
+
 class SearchNet:
 	def __init__(self, dbName):
 		self.db = sqlite.connect(dbName)
@@ -130,3 +133,54 @@ class SearchNet:
 		self.setupNetwork(wordIds, urlIds)
 		return self.feedForward()
 
+	def backPropagate(self, targets, N = 0.5):
+		# Calculate errors for output
+		outputDeltas = [0.0] * len(self.urlIds)
+
+		for k in range(len(self.urlIds)):
+			error = targets[k] - self.aOutput[k]
+			outputDeltas[k] = dtanh(self.aOutput[k]) * error
+
+		# Calculate errors for hidden layer
+		hiddenDeltas = [0.0] * len(self.hiddenIds)
+
+		for j in range(len(self.hiddenIds)):
+			error = 0
+			for k in range(len(self.urlIds)):
+				error = error + outputDeltas[k] * self.weightOutput[j][k]
+			hiddenDeltas[j] = dtanh(self.aHidden[j] * error)
+
+		# Update output weights
+		for j in range(len(self.hiddenIds)):
+			for k in range(len(self.urlIds)):
+				change = outputDeltas[k] * self.aHidden[j]
+				self.weightOutput[j][k] = self.weightOutput[j][k] + N * change
+
+		# Update input weights
+		for i in range(len(self.wordIds)):
+			for j in range(len(self.hiddenIds)):
+				change = hiddenDeltas[j] * self.aInput[i]
+				self.weightInput[i][j] = self.weightInput[i][j] + N * change
+
+	def trainQuery(self, wordIds, urlIds, selectedUrl):
+		# Generate a hidden node if necessary
+		self.generateHiddenNode(wordIds, urlIds)
+
+		self.setupNetwork(wordIds, urlIds)
+		self.feedForward()
+		targets = [0.0] * len(urlIds)
+		targets[urlIds.index(selectedUrl)] = 1.0
+		self.backPropagate(targets)
+		self.updateDatabase()
+
+	def updateDatabase(self):
+		# Set them to database values
+		for i in range(len(self.wordIds)):
+			for j in range(len(self.hiddenIds)):
+				self.setStrength(self.wordIds[i], self.hiddenIds[j], 0, self.weightInput[i][j])
+
+		for j in range(len(self.hiddenIds)):
+			for k in range(len(self.urlIds)):
+				self.setStrength(self.hiddenIds[j], self.urlIds[k], 1, self.weightOutput[j][k])
+
+		self.db.commit()
