@@ -1,11 +1,11 @@
 import re
 import urllib2
 import sqlite3 as sqlite
-import NeuraNetwork
+import NeuralNetwork
 from bs4 import BeautifulSoup
 from urlparse import urljoin
 
-sn = NeuraNetwork.SearchNet('NeuraNetwork.db')
+sn = NeuralNetwork.SearchNet('NeuraNetwork.db')
 # A list of words to ignore
 ignoreWords = set(['the', 'of', 'to', 'and', 'a', 'in', 'is', 'it'])
 
@@ -258,14 +258,80 @@ class Searcher:
 	def getUrlName(self, id):
 		return self.db.execute("select url from UrlList where rowid = %d" % id).fetchone()[0]
 
+	def generateQueryOperationList(self, q):
+		operands = []
+		operators = []
+
+		# Look for ()
+		lpc = q.count('(')
+		rpc = q.count(')')
+
+		if (lpc != rpc):
+			return None
+
+		if (lpc > 0):
+			rpi = q.find(')')
+			lpi = q[0 : rpi].rfind('(')
+			operands, operators = self.generateQueryOperationList(q[lpi + 1 : rpi])
+			operands1, operators1 = self.generateQueryOperationList(q[: lpi] + q[rpi + 1 :])
+			operands = operands + operands1
+			operators = operators + operators1
+
+			return operands, operators
+
+		words = q.split()
+		newOperand = False
+		
+		for word in words:
+			if (word == 'OR' or word == 'AND'):
+				operators.append(word)
+				newOperand = True
+			else:
+				if newOperand:
+						operands.append(word)
+				else:
+					if len(operands) == 0:
+						operands.append(word)
+					else:
+						operands[len(operands) - 1] = operands[len(operands) - 1] + ' ' + word
+
+				newOperand = False
+				
+
+		return operands, operators
+
+
 	def query(self, q):
+		operands = []
+		operators = []
+		# Convert (A OR (D OR (B AND C))) OR E
+		# operands = [B, C, D, A, E]
+		# operators = [AND, OR, OR, OR]
+		operands, operators = self.generateQueryOperationList(q)
+
+		links = []
+		resultLinks = []
+		for index, operand in enumerate(operands):
+			links = self.doQuery(operand)
+
+			if index != 0:
+				if operators[index - 1] == 'AND':
+					resultLinks = list(set(resultLinks) & set(links))
+				else:
+					resultLinks = list(set(resultLinks) | set(links))
+			else:
+				resultLinks = links
+
+		return resultLinks
+
+	def doQuery(self, q):
 		rows, wordIds = self.getMatchRows(q)
 		scores = self.getScoreList(rows, wordIds)
 		rankedScores = sorted([(score, url) for (url, score) in scores.items()], reverse = 1)
-		for (score, urlId) in rankedScores[0:10]:
-			print '%f\t%s' % (score, self.getUrlName(urlId))
+		#for (score, urlId) in rankedScores[0:10]:
+		#	print '%f\t%s' % (score, self.getUrlName(urlId))
 
-		return wordIds, [r[1] for r in rankedScores[0:10]]
+		return [r[1] for r in rankedScores[0:10]]
 
 	def normalizeScores(self, scores, smallIsBetter = 0):
 		# Avoid division by zero errors
