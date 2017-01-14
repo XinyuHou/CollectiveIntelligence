@@ -276,21 +276,35 @@ class Searcher:
 
 		return rows, wordIds
 
-	def getScoreList(self, rows, wordIds):
+	def getScoreList(self, rows, wordIds, preferLong):
 		totalScores = dict([(row[0], 0) for row in rows])
 
 		weights = [(1.0, self.frequencyScore(rows)),
-				   	(1.0, self.locationScore(rows)),
-				   	(1.0, self.distanceScore(rows)),
-				   	(1.0, self.pageRankScore(rows)),
-				  # (1.0, self.neuralNetworkScore(rows, wordIds)),
-				   	(1.0, self.linkTextScore(rows, wordIds))]
+				   (1.0, self.locationScore(rows)),
+				   (1.0, self.distanceScore(rows)),
+				   (1.0, self.pageRankScore(rows)),
+				   #(1.0, self.neuralNetworkScore(rows, wordIds)),
+				   (1.0, self.linkTextScore(rows, wordIds)),
+				   (1.0, self.documentLengthScore(rows, preferLong))]
 
 		for (weight, scores) in weights:
 			for url in totalScores:
 				totalScores[url] += weight * scores[url]
 
 		return totalScores
+
+	def documentLengthScore(self, rows, preferLong):
+		length = dict([(row[0], -1) for row in rows])
+		for row in rows:
+			if length[row[0]] == -1:
+				length[row[0]] = self.urlWordsCount(row[0])
+
+		return self.normalizeScores(length, smallIsBetter = 0 if preferLong else 1)
+
+	def urlWordsCount(self, url):
+		query = 'select count(*) from WordLocation where urlId = %d' % url
+		count = self.db.execute(query).fetchone()[0]
+		return count
 
 	def getUrlName(self, id):
 		return self.db.execute("select url from UrlList where rowid = %d" % id).fetchone()[0]
@@ -337,8 +351,7 @@ class Searcher:
 
 		return operands, operators
 
-
-	def query(self, q):
+	def query(self, q, preferLong = False):
 		operands = []
 		operators = []
 		# Convert (A OR (D OR (B AND C))) OR E
@@ -349,7 +362,7 @@ class Searcher:
 		links = []
 		resultLinks = []
 		for index, operand in enumerate(operands):
-			links = self.doQuery(operand)
+			links = self.doQuery(operand, preferLong)
 
 			if index != 0:
 				if operators[index - 1] == 'AND':
@@ -361,7 +374,7 @@ class Searcher:
 
 		return resultLinks
 
-	def doQuery(self, q):
+	def doQuery(self, q, preferLong):
 		if q[0] == '"' and q[len(q) - 1] == '"' :
 			# Do exact match
 			q = q[1: len(q) - 1]
@@ -370,10 +383,10 @@ class Searcher:
 		else:
 			rows, wordIds = self.getMatchRows(q)
 
-		scores = self.getScoreList(rows, wordIds)
+		scores = self.getScoreList(rows, wordIds, preferLong)
 		rankedScores = sorted([(score, url) for (url, score) in scores.items()], reverse = 1)
-		#for (score, urlId) in rankedScores[0:10]:
-		#	print '%f\t%s' % (score, self.getUrlName(urlId))
+		for (score, urlId) in rankedScores[0:10]:
+			print '%f\t%s' % (score, self.getUrlName(urlId))
 
 		return [r[1] for r in rankedScores[0:10]]
 
