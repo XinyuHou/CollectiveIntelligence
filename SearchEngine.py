@@ -239,6 +239,43 @@ class Searcher:
 
 		return rows, wordIds
 
+	def getExactMatchRows(self, query):
+		# Strings to build the query
+		fieldList = 'w0.urlId'
+		tableList = ''
+		clauseList = ''
+		wordIds = []
+
+		# Split the words by spaces
+		words = query.split(' ')
+		tableNumber = 0
+
+		for word in words:
+			# Get the word ID
+			wordRow = self.db.execute("select rowid from WordList where word = '%s'" % word).fetchone()
+			if wordRow != None:
+				wordId = wordRow[0]
+				wordIds.append(wordId)
+				if tableNumber > 0:
+					tableList += ','
+					clauseList += ' and '
+					clauseList += 'w%d.urlId = w%d.urlId and ' % (tableNumber - 1, tableNumber)
+
+				fieldList += ', w%d.location' % tableNumber
+				tableList += 'WordLocation w%d' % tableNumber
+				clauseList += 'w%d.wordId = %d' % (tableNumber, wordId)
+				if tableNumber > 0:
+					clauseList += ' and (w%d.location - w%d.location) = 1' % (tableNumber, tableNumber - 1)
+				tableNumber += 1
+
+		# Create the query from the separate parts
+		fullQuery = 'select %s from %s where %s' % (fieldList, tableList, clauseList)
+
+		cur = self.db.execute(fullQuery)
+		rows = [row for row in cur]
+
+		return rows, wordIds
+
 	def getScoreList(self, rows, wordIds):
 		totalScores = dict([(row[0], 0) for row in rows])
 
@@ -325,7 +362,14 @@ class Searcher:
 		return resultLinks
 
 	def doQuery(self, q):
-		rows, wordIds = self.getMatchRows(q)
+		if q[0] == '"' and q[len(q) - 1] == '"' :
+			# Do exact match
+			q = q[1: len(q) - 1]
+			print 'Use exact match to search for ' + q
+			rows, wordIds = self.getExactMatchRows(q)
+		else:
+			rows, wordIds = self.getMatchRows(q)
+
 		scores = self.getScoreList(rows, wordIds)
 		rankedScores = sorted([(score, url) for (url, score) in scores.items()], reverse = 1)
 		#for (score, urlId) in rankedScores[0:10]:
