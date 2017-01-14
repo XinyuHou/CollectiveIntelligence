@@ -173,6 +173,18 @@ class SearchNet:
 		self.backPropagate(targets)
 		self.updateDatabase()
 
+	def trainQueryScores(self, wordIds, urlIds, scores):
+		# Generate a hidden node if necessary
+		self.generateHiddenNode(wordIds, urlIds)
+
+		self.setupNetwork(wordIds, urlIds)
+		self.feedForward()
+		targets = [0.0] * len(urlIds)
+		for index, target in enumerate(targets):
+			targets[index] = scores[index]
+		self.backPropagate(targets)
+		self.updateDatabase()
+
 	def updateDatabase(self):
 		# Set them to database values
 		for i in range(len(self.wordIds)):
