@@ -22,10 +22,27 @@ class SearchNet:
 		self.db.commit()
 
 	def getStrength(self, fromId, toId, layer):
-		
+		table = 'Connection%d' % layer
 
-	def setStrength(self, fromId, toId, layer, strength):
+		res = self.db.execute('select strength from %s where fromId = %d and toId = %d' % (table, fromId, toId)).fetchone()
+		if res == None:
+			if layer == 0:
+				return -0.2
+			else:
+				return 0
+
+		return res[0]
 		
+	def setStrength(self, fromId, toId, layer, strength):
+		table = 'Connection%d' % layer
+
+		res = self.db.execute('select rowid from %s where fromId = %d and toId = %d' % (table, fromId, toId)).fetchone()
+		if res == None:
+			self.db.execute('insert into %s (fromId, toId, strength) values (%d, %d, %f)' % (table, fromId, toId, strength))
+		else:
+			rowid = res[0]
+			self.db.execute('update %s set strength = %f where rowid = %d' % (table, strength, rowid))
+
 	def generateHiddenNode(self, wordIds, urls):
 		
 	def getAllHiddenIds(self, wordIds, urlIds):
