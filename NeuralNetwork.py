@@ -181,7 +181,7 @@ class SearchNet:
 		self.feedForward()
 		targets = [0.0] * len(urlIds)
 		for index, target in enumerate(targets):
-			targets[index] = scores[index]
+			targets[index] = scores[index] / float(5.0)
 		self.backPropagate(targets)
 		self.updateDatabase()
 
