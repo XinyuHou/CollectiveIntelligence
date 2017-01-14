@@ -411,6 +411,43 @@ class Searcher:
 
 		scores = self.getScoreList(rows, wordIds, preferLong)
 		rankedScores = sorted([(score, url) for (url, score) in scores.items()], reverse = 1)
+
+		# Do inbound link search on all other urls
+		# First get the count of all urls
+		allUrlsCount = self.db.execute('select count(*) from UrlList').fetchone()[0]
+
+		# # Get all unique url results
+		exist = []
+		uniqueResult = [row[0] for row in rows if row[0] not in exist and (exist.append(row[0]) or True)]
+
+		# Get all the urls excludes the result
+		otherUrls = []
+		for urlId in range(allUrlsCount):
+			if urlId not in uniqueResult:
+				otherUrls.append(urlId)
+
+		# Do inbound link search
+		for otherUrl in otherUrls:
+			# Get all inbound links to this url
+			inboundLinks = self.db.execute('select distinct fromId from Link where toId = %d' % otherUrl).fetchone()
+
+			uniquePotentialFromUrls = set()
+			# Check how many ot the inbound links texts contain the search words
+			for wordId in wordIds:
+				# self.db.execute('create table Link(fromId integer, toId integer)')
+				# self.db.execute('create table LinkWords(wordId, linkId)')
+				potentialFromUrls = self.db.execute('select distinct Link.fromId from LinkWords, Link where wordId = %d and LinkWords.linkId = Link.rowid' % wordId).fetchone()
+				for fromUrl in potentialFromUrls:
+					if fromUrl not in uniquePotentialFromUrls:
+						uniquePotentialFromUrls.add(fromUrl)
+
+			# If more than 50%, add it into result
+			if inboundLinks != None:
+				totalFromUrlsCount = len(inboundLinks)
+				uniquePotentialFromUrlsCount = len(uniquePotentialFromUrls)
+				if (uniquePotentialFromUrlsCount / float(totalFromUrlsCount)) > 0.5:
+					rankedScores.append((0.0, otherUrl))
+
 		for (score, urlId) in rankedScores[0:10]:
 			print '%f\t%s' % (score, self.getUrlName(urlId))
 
