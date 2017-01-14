@@ -279,19 +279,45 @@ class Searcher:
 	def getScoreList(self, rows, wordIds, preferLong):
 		totalScores = dict([(row[0], 0) for row in rows])
 
-		weights = [(1.0, self.frequencyScore(rows)),
+		weights = [
+					(1.0, self.frequencyScore(rows)),
 				   (1.0, self.locationScore(rows)),
 				   (1.0, self.distanceScore(rows)),
 				   (1.0, self.pageRankScore(rows)),
 				   #(1.0, self.neuralNetworkScore(rows, wordIds)),
 				   (1.0, self.linkTextScore(rows, wordIds)),
-				   (1.0, self.documentLengthScore(rows, preferLong))]
+				   (1.0, self.documentLengthScore(rows, preferLong)),
+				   (1.0, self.wordFrequency(rows, wordIds))]
+
+				   
 
 		for (weight, scores) in weights:
 			for url in totalScores:
 				totalScores[url] += weight * scores[url]
 
 		return totalScores
+
+	def wordFrequency(self, rows, wordIds):
+		wordFrequency = dict([(row[0], -1.0) for row in rows])
+		totalWords = dict([(row[0], -1.0) for row in rows])
+		wordsAppearance = dict([(row[0], -1.0) for row in rows])
+
+		for row in rows:
+			if totalWords[row[0]] == -1:
+				totalWords[row[0]] = self.urlWordsCount(row[0])
+
+				wordsAppearance = 0
+				for wordId in wordIds:
+					wordsAppearance = wordsAppearance + self.countWordsInUrl(row[0], wordId)
+
+				wordFrequency[row[0]] = wordsAppearance / float(totalWords[row[0]])
+
+		return self.normalizeScores(wordFrequency, 0)
+
+	def countWordsInUrl(self, urlId, wordId):
+		query = 'select count(*) from WordLocation where urlId = %d and wordId = %d' % (urlId, wordId)
+		count = self.db.execute(query).fetchone()[0]
+		return count
 
 	def documentLengthScore(self, rows, preferLong):
 		length = dict([(row[0], -1) for row in rows])
@@ -301,8 +327,8 @@ class Searcher:
 
 		return self.normalizeScores(length, smallIsBetter = 0 if preferLong else 1)
 
-	def urlWordsCount(self, url):
-		query = 'select count(*) from WordLocation where urlId = %d' % url
+	def urlWordsCount(self, urlId):
+		query = 'select count(*) from WordLocation where urlId = %d' % urlId
 		count = self.db.execute(query).fetchone()[0]
 		return count
 
