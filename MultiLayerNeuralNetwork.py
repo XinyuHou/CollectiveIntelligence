@@ -155,7 +155,7 @@ class SearchNet:
 
 								# Calculate the shared count
 								sharedCount = set(preParts) & set(curParts)
-								newStrength = 0.1 * (len(sharedCount) / float(len(curParts))
+								newStrength = 0.1 * (len(sharedCount) / float(len(curParts)))
 								
 								toId = self.db.execute("select rowid from HiddenNode%d where createKey = '%s'" % (i, curNodes[0])).fetchone()[0]
 								
