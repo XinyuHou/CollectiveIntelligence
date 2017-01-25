@@ -102,64 +102,84 @@ class SearchNet:
 				for preNode1 in preNodes:
 					if preNode1[0] in newNodesInPreviousLayer:	
 						preNewNode = preNode1[0]
-						# Create a new node in current layer
-						cur = self.db.execute("insert into HiddenNode%d (createKey) values ('%s')" % (i, preNewNode))
-						print 'Added new node in HiddenNode%d: %s' % (i, preNewNode)
-						self.db.commit()
 
-						newNodesInCurLayer.append(preNewNode)
+						if preNewNode not in curNodes: 
+							# Create a new node in current layer
+							cur = self.db.execute("insert into HiddenNode%d (createKey) values ('%s')" % (i, preNewNode))
+							print 'Added new node in HiddenNode%d: %s' % (i, preNewNode)
+							self.db.commit()
 
-						# Add weight
-						fromId = self.db.execute("select rowid from HiddenNode%d where createKey = '%s'" % (i - 1, preNewNode)).fetchone()[0]
-						toId = self.db.execute("select rowid from HiddenNode%d where createKey = '%s'" % (i, preNewNode)).fetchone()[0]
-						self.setStrength(fromId, toId, i, 0.1)
+							curNodes.append(preNewNode)
+							newNodesInCurLayer.append(preNewNode)
 
-						# Combine each node that is not newly added in previous layer to generate new nodes
-						for preNode2 in preNodes:
-							if (preNode2[0] not in newNodesInPreviousLayer):
-								preExistingNode = preNode2[0]
-								wordIds = preExistingNode.split('_')
-								newWordIds = preNewNode.split('_')
+							# Add weight
+							fromId = self.db.execute("select rowid from HiddenNode%d where createKey = '%s'" % (i - 1, preNewNode)).fetchone()[0]
+							toId = self.db.execute("select rowid from HiddenNode%d where createKey = '%s'" % (i, preNewNode)).fetchone()[0]
+							self.setStrength(fromId, toId, i, 0.1)
 
-								# Merge two lists without duplicates
-								wordIdsSet = set(wordIds)
-								newWordIdsSet = set(newWordIds)
-								setDiff = newWordIdsSet - wordIdsSet
-								allUniqueWordIdsSet = list(wordIdsSet) + list(setDiff)
-								combinedNode = '_'.join(sorted([str(wi) for wi in allUniqueWordIdsSet]))
+							# Combine each node that is not newly added in previous layer to generate new nodes
+							for preNode2 in preNodes:
+								if (preNode2[0] not in newNodesInPreviousLayer):
+									preExistingNode = preNode2[0]
+									wordIds = preExistingNode.split('_')
+									newWordIds = preNewNode.split('_')
 
-								# Add combined node if not exist in current layer
-								if combinedNode not in curNodes:
-									cur = self.db.execute("insert into HiddenNode%d (createKey) values ('%s')" % (i, combinedNode))
-									newNodesInCurLayer.append(combinedNode)
-									self.db.commit()
+									# Merge two lists without duplicates
+									wordIdsSet = set(wordIds)
+									newWordIdsSet = set(newWordIds)
+									setDiff = newWordIdsSet - wordIdsSet
+									allUniqueWordIdsSet = list(wordIdsSet) + list(setDiff)
+									combinedNode = '_'.join(sorted([str(wi) for wi in allUniqueWordIdsSet]))
 
-								newWordsCount = len(newWordIdsSet)
-								combinedWordsCount = len(allUniqueWordIdsSet)
-								newStrength = 0.1 * (newWordsCount / combinedWordsCount)
-								print 'Set strength between %d and %d with %f in layer %d' % (fromId, toId, newStrength, i)
+									# Add combined node if not exist in current layer
+									if combinedNode not in curNodes:
+										print 'Added combinedNode node in HiddenNode%d: %s' % (i, combinedNode)
+										cur = self.db.execute("insert into HiddenNode%d (createKey) values ('%s')" % (i, combinedNode))
+										
+										curNodes.append(combinedNode)
+										newNodesInCurLayer.append(combinedNode)
+										
+										self.db.commit()
+
+										# newWordsCount = len(newWordIdsSet)
+										# combinedWordsCount = len(allUniqueWordIdsSet)
+										# newStrength = 0.1 * (newWordsCount / combinedWordsCount)
+										# print 'Set strength between %d and %d with %f in layer %d' % (fromId, toId, newStrength, i)
 
 						# Add weights
 						# Calculate the persentage of the match part and times 0.1 as new strength
 						totalCurNodes = self.db.execute("select * from HiddenNode%d" % i).fetchall()
-						for preNode in newNodesInPreviousLayer:
-							fromId = self.db.execute("select rowid from HiddenNode%d where createKey = '%s'" % (i - 1, preNode)).fetchone()[0]
-							
+						totalPreNodes = self.db.execute("select * from HiddenNode%d" % (i -1)).fetchall()
+						for preNode in totalPreNodes:
+							print preNode[0]
+							fromId = self.db.execute("select rowid from HiddenNode%d where createKey = '%s'" % (i - 1, preNode[0])).fetchone()[0]
+							print 'total previous nodes'
+							print totalPreNodes
+							print 'total current nodes'
+							print totalCurNodes
 							for curNodes in totalCurNodes:
 								# Skip the exact matching pair, as the connection has been built in previous stage
-								if preNode == curNodes[0]:
+								if preNode[0] == curNodes[0]:
 									continue
 
-								preParts = preNode.split('_')
+								preParts = preNode[0].split('_')
 								curParts = curNodes[0].split('_')
+
+								if len(preParts) <= len(curParts):
+									continue
 
 								# Calculate the shared count
 								sharedCount = set(preParts) & set(curParts)
-								newStrength = 0.1 * (len(sharedCount) / float(len(curParts)))
+								newStrength = 0.1 * (len(sharedCount) / float(len(preParts)))	
 								
+								print 'node in previous layer %s' % preNode[0]
+								print 'node in current layer %s' % curNodes[0]
+								print 'sharedCount: %d ' % (len(sharedCount))
+								print 'preParts count: %d' % len(preParts)
+				
 								toId = self.db.execute("select rowid from HiddenNode%d where createKey = '%s'" % (i, curNodes[0])).fetchone()[0]
-								
 								print 'Set strength between %d and %d with %f in layer %d' % (fromId, toId, newStrength, i)
+								
 								self.setStrength(fromId, toId, i, newStrength)
 
 						self.db.commit()
