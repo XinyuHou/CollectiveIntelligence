@@ -164,23 +164,20 @@ class SearchNet:
 
 								preParts = preNode[0].split('_')
 								curParts = curNodes[0].split('_')
-
-								if len(preParts) <= len(curParts):
-									continue
-
-								# Calculate the shared count
-								sharedCount = set(preParts) & set(curParts)
-								newStrength = 0.1 * (len(sharedCount) / float(len(preParts)))	
-								
-								print 'node in previous layer %s' % preNode[0]
-								print 'node in current layer %s' % curNodes[0]
-								print 'sharedCount: %d ' % (len(sharedCount))
-								print 'preParts count: %d' % len(preParts)
-				
-								toId = self.db.execute("select rowid from HiddenNode%d where createKey = '%s'" % (i, curNodes[0])).fetchone()[0]
-								print 'Set strength between %d and %d with %f in layer %d' % (fromId, toId, newStrength, i)
-								
-								self.setStrength(fromId, toId, i, newStrength)
+								if set(preParts).issuperset(set(curParts)):
+									# Calculate the shared count
+									sharedCount = set(preParts) & set(curParts)
+									newStrength = 0.1 * (len(sharedCount) / float(len(preParts)))	
+									
+									print 'node in previous layer %s' % preNode[0]
+									print 'node in current layer %s' % curNodes[0]
+									print 'sharedCount: %d ' % (len(sharedCount))
+									print 'preParts count: %d' % len(preParts)
+					
+									toId = self.db.execute("select rowid from HiddenNode%d where createKey = '%s'" % (i, curNodes[0])).fetchone()[0]
+									print 'Set strength between %d and %d with %f in layer %d' % (fromId, toId, newStrength, i)
+									
+									self.setStrength(fromId, toId, i, newStrength)
 
 						self.db.commit()
 				
