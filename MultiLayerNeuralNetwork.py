@@ -89,8 +89,8 @@ class SearchNet:
 			for i in range(2, self.layers - 1):
 				# Get all nodes from this layer
 				print 'Creating HiddenNode%d and Connection%d' % (i, i)
-				curNodes = self.db.execute("select * from HiddenNode%d" % i).fetchall()
-				preNodes = self.db.execute("select * from HiddenNode%d" % (i - 1)).fetchall()
+				curNodes = [item[0] for item in self.db.execute("select * from HiddenNode%d" % i).fetchall()]
+				preNodes = [item[0] for item in self.db.execute("select * from HiddenNode%d" % (i - 1)).fetchall()]
 
 				print 'PreNode:'
 				print preNodes
@@ -100,8 +100,8 @@ class SearchNet:
 				print newNodesInPreviousLayer
 
 				for preNode1 in preNodes:
-					if preNode1[0] in newNodesInPreviousLayer:	
-						preNewNode = preNode1[0]
+					if preNode1 in newNodesInPreviousLayer:	
+						preNewNode = preNode1
 
 						if preNewNode not in curNodes: 
 							# Create a new node in current layer
@@ -119,8 +119,8 @@ class SearchNet:
 
 							# Combine each node that is not newly added in previous layer to generate new nodes
 							for preNode2 in preNodes:
-								if (preNode2[0] not in newNodesInPreviousLayer):
-									preExistingNode = preNode2[0]
+								if (preNode2 not in newNodesInPreviousLayer):
+									preExistingNode = preNode2
 									wordIds = preExistingNode.split('_')
 									newWordIds = preNewNode.split('_')
 
@@ -129,10 +129,12 @@ class SearchNet:
 									newWordIdsSet = set(newWordIds)
 									setDiff = newWordIdsSet - wordIdsSet
 									allUniqueWordIdsSet = list(wordIdsSet) + list(setDiff)
-									combinedNode = '_'.join(sorted([str(wi) for wi in allUniqueWordIdsSet]))
+									combinedNode = unicode('_'.join(sorted([str(wi) for wi in allUniqueWordIdsSet])), "utf-8")
 
 									# Add combined node if not exist in current layer
 									if combinedNode not in curNodes:
+										print 'CurNodes'
+										print curNodes
 										print 'Added combinedNode node in HiddenNode%d: %s' % (i, combinedNode)
 										cur = self.db.execute("insert into HiddenNode%d (createKey) values ('%s')" % (i, combinedNode))
 										
@@ -151,7 +153,7 @@ class SearchNet:
 						totalCurNodes = self.db.execute("select * from HiddenNode%d" % i).fetchall()
 						totalPreNodes = self.db.execute("select * from HiddenNode%d" % (i -1)).fetchall()
 						for preNode in totalPreNodes:
-							print preNode[0]
+							print preNode
 							fromId = self.db.execute("select rowid from HiddenNode%d where createKey = '%s'" % (i - 1, preNode[0])).fetchone()[0]
 							print 'total previous nodes'
 							print totalPreNodes
