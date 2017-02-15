@@ -57,7 +57,7 @@ class SearchNet:
 		if len(wordIds) > 3: return None
 
 		# Check if we alreayd created a node for this set of words
-		originalCreateKey = '_'.join(sorted([str(wi) for wi in wordIds]))
+		originalCreateKey = unicode('_'.join(sorted([str(wi) for wi in wordIds])), "utf-8")
 		
 		res = self.db.execute("select rowid from HiddenNode1 where createKey = '%s'" % originalCreateKey).fetchone()
 
@@ -186,21 +186,30 @@ class SearchNet:
 				newNodesInPreviousLayer = newNodesInCurLayer
 			self.db.commit()
 			# Finally put weight for last hiddenNode and output
-			# A, B, C and Url1, Url2 generate weights as 
-			# A_B_C => 0.1 => Url1
-			# A_B_C => 0.1 => Url2
+			# A, B,  and Url1, Url2 generate weights as 
+			# A_B => 0.1 => Url1
+			# A_B => 0.1 => Url2
 			# Newly added ndoe B_C would create weights as
-			# B_C => 0.1 * 2 / 3 => Url1
-			# B_C => 0.1 * 2 / 3 => Url2
-			# query = "select rowid, createKey from HiddenNode%d where createKey like '%s'" % (self.layers - 2, '%' + originalCreateKey + '%')
-			# print query
-			# fromIds, superSetCreateKeys = self.db.execute(query).fetchone()
-			# for index, fromId in enumerate(fromIds):
-			# 	originalLength = len(originalCreateKey + 1)
-			# 	superSetLength = len(superSetCreateKeys[index] + 1)
-			# 	for urlId in urls:
-			# 		newStrength = 0.1 * (originalLength / float(superSetLength))
-			# 		self.setStrength(fromId, urlId, self.layers - 2, newStrength)
+			# B_C => 0.1 => Url1
+			# B_C => 0.1 => Url2
+			# A_B_C = 0.1 * 2 /3 => Url1
+			# A_B_C = 0.1 * 2 /3 => Url2
+
+			for node in newNodesInPreviousLayer:
+				fromId = self.db.execute("select rowid from HiddenNode%d where createKey = '%s'" % (self.layers - 2, node)).fetchone()[0]
+				if node == originalCreateKey:
+					for url in urls:
+						self.setStrength(fromId, url, self.layers - 1, 0.1)
+				else:
+					originalParts = originalCreateKey.split('_')
+					nodeParts = node.split('_')
+
+					if set(nodeParts).issuperset(set(originalParts)):
+						# Calculate the shared count
+						sharedCount = set(originalParts) & set(nodeParts)
+						newStrength = 0.1 * (len(sharedCount) / float(len(nodeParts)))
+						for url in urls:
+							self.setStrength(fromId, url, self.layers - 1, newStrength)
 
 			self.db.commit()
 
