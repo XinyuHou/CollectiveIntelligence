@@ -214,10 +214,59 @@ class SearchNet:
 			self.db.commit()
 
 	def getAllHiddenIds(self, wordIds, urlIds):
-		pass
+		self.hiddenIds = []
+		self.layers
+
+		# forward
+		l1 = {}
+		for wordId in wordIds:
+			cur = self.db.execute('select toId from Connection1 where fromId = %d' % wordId)
+			for row in cur:
+				l1[row[0]] = 1
+		self.hiddenIds.append(l1)
+
+		for layer in range(self.layers - 3):
+			l2 = {}
+			
+			for hiddenId in l1.keys():
+				cur = self.db.execute('select toId from Connection%d where fromId = %d' % (layer + 2, hiddenId))
+				for row in cur:
+					l2[row[0]] = 1
+		
+			self.hiddenIds.append(l2)
+			l1 = l2
+		print "forward result: "
+		print self.hiddenIds
+
+		# backward
+		for urlId in urlIds:
+			cur = self.db.execute('select fromId from Connection%d where toId = %d' % (self.layers - 1, urlId))
+			for row in cur:
+				self.hiddenIds[self.layers - 3][row[0]] = 1
+
+		for layer in range(len(self.hiddenIds) - 1):
+			curIndex = len(self.hiddenIds) - layer - 1
+			preIndex = curIndex - 1
+
+			for hiddenId in self.hiddenIds[curIndex].keys():
+				cur = self.db.execute('select fromId from Connection%d where toId = %d' % (self.layers - layer - 2, hiddenId))
+				for row in cur:
+					self.hiddenIds[preIndex][row[0]] = 1
+		print "forward plus backward result: "
+		print self.hiddenIds
 
 	def setupNetwork(self, wordIds, urlIds):
-		pass
+		# Values
+		self.wordIds = wordIds
+		self.getAllHiddenIds(wordIds, urlIds)
+		self.urlIds = urlIds
+
+		# Outputs
+		self.inputOut = [1.0] * len(self.wordIds)
+		self.outputOut = [1.0] * len(self.urlIds)
+
+		# Matrix
+
 
 	def feedForward(self):
 		pass
