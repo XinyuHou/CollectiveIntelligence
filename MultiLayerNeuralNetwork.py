@@ -255,6 +255,10 @@ class SearchNet:
 		print "forward plus backward result: "
 		print self.hiddenIds
 
+		for layer in range(len(self.hiddenIds)):
+			self.hiddenIds[layer] = self.hiddenIds[layer].keys()
+		print self.hiddenIds
+
 	def setupNetwork(self, wordIds, urlIds):
 		# Values
 		self.wordIds = wordIds
@@ -264,9 +268,28 @@ class SearchNet:
 		# Outputs
 		self.inputOut = [1.0] * len(self.wordIds)
 		self.outputOut = [1.0] * len(self.urlIds)
+		self.hiddenOut = []
+		hiddenIdSize = len(self.hiddenIds)
+		for layer in range(hiddenIdSize):
+			out = [1.0] * len(self.hiddenIds[layer])
+			self.hiddenOut.append(out)
 
 		# Matrix
+		self.weightMatrix = []
 
+		# Weights between input and hidden1
+		weight1 = [[self.getStrength(wordId, hiddenId, 1) for hiddenId in self.hiddenIds[0]] for wordId in self.wordIds]
+		self.weightMatrix.append(weight1)
+
+		for layer in range(hiddenIdSize - 1):
+			weight = [[self.getStrength(hiddenId1, hiddenId2, layer + 2) for hiddenId1 in self.hiddenIds[layer]] for hiddenId2 in self.hiddenIds[layer + 1]]
+			self.weightMatrix.append(weight)
+
+		# Weights between last hidden to output
+		weight2 = [[self.getStrength(hiddenId, urlId, self.layers - 1) for urlId in self.urlIds] for hiddenId in self.hiddenIds[hiddenIdSize - 1]]
+		self.weightMatrix.append(weight2)
+
+		print self.weightMatrix
 
 	def feedForward(self):
 		pass
