@@ -329,6 +329,9 @@ class SearchNet:
 		self.setupNetwork(wordIds, urlIds)
 		return self.feedForward()
 
+	def dtanh(y):
+		return 1.0 - y * y
+	
 	def backPropagate(self, targets, N = 0.5):
 		pass
 
