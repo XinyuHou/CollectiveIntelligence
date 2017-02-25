@@ -307,7 +307,6 @@ class SearchNet:
 		for k in range(len(self.hiddenOut) - 1):
 
 			for j in range(len(self.hiddenOut[k + 1])):
-				print "j: ",j
 				sum = 0.0
 				for i in range(len(self.hiddenOut[k])):
 					sum = sum + self.hiddenOut[k][i] * self.weightMatrix[k + 1][i][j]
@@ -331,15 +330,84 @@ class SearchNet:
 
 	def dtanh(y):
 		return 1.0 - y * y
-	
+
 	def backPropagate(self, targets, N = 0.5):
-		pass
+		# Calculate errors for output
+		outputDeltas = [0.0] * len(self.urlIds)
+
+		for k in range(len(self.urlIds)):
+			error = targets[k] - self.outputOut[k]
+			outputDeltas[k] = dtanh(self.outputOut[k]) * error
+
+		# Calculate errors for hiddenN
+		hiddenIdsSize = len(self.hiddenIds)
+		weightMatrixSize = len(self.weightMatrix)
+		hiddenOutSize = len(self.hiddenOut)
+		hiddenDeltas = [0.0] * len(self.hiddenIds[hiddenIdsSize - 1])
+
+		for j in range(len(self.hiddenIds[hiddenIdsSize - 1])):
+			error = 0
+			for k in range(len(self.urlIds)):
+				error = error + outputDeltas[k] * self.weightMatrix[weightMatrixSize - 1][j][k]
+			hiddenDeltas[j] = dtanh(self.hiddenOut[hiddenOutSize - 1][j] * error)
+
+		# Update output weights
+		for j in range(len(self.hiddenIds[hiddenIdsSize - 1])):
+			for k in range(len(self.urlIds)):
+				change = outputDeltas[k] * self.hiddenOut[hiddenOutSize - 1][j]
+				self.weightMatrix[weightMatrixSize - 1][j][k] = self.weightMatrix[weightMatrixSize - 1][j][k] + N * change
+
+		# Do the same thing forward to update the rest of the weight matrix
+		# Bewteen hidden1 and hiddenN
+		for i in range(hiddenIdsSize - 2, 0, -1):
+			nextHiddenDeltas = [0.0] * len(self.hiddenIds[i - 1])
+			for j in range(len(self.hiddenIds[i - 1])):
+				error = 0
+				for k in range(len(self.hiddenIds[i])):
+					error = error + hiddenDeltas[k] * self.weightMatrix[i][j][k]
+				nextHiddenDeltas[j] = dtanh(self.hiddenOut[i - 1][j] * error)
+
+			for j in range(len(self.hiddenIds[i - 1])):
+				for k in range(len(self.hiddenIds[i])):
+					change = hiddenDeltas[k] * self.hiddenOut[i - 1][j]
+					self.weightMatrix[i][j][k] = self.weightMatrix[i][j][k] + N * change
+
+			hiddenDeltas = nextHiddenDeltas
+
+		# Between input and hidden1
+		for i in range(len(self.wordIds)):
+			for j in range(len(self.hiddenIds[0])):
+				change = hiddenDeltas[j] * self.inputOut[i]
+				self.weightMatrix[0][i][j] = self.weightMatrix[0][i][j] + N * change
 
 	def trainQuery(self, wordIds, urlIds, selectedUrl):
-		pass
+		# Generate a hidden node if necessary
+		self.generateHiddenNodes(wordIds, urlIds)
 
-	def trainQueryScores(self, wordIds, urlIds, scores):
-		pass
+		self.setupNetwork(wordIds, urlIds)
+		self.feedForward()
+		targets = [0.0] * len(urlIds)
+		targets[urlIds.index(selectedUrl)] = 1.0
+		self.backPropagate(targets)
+		self.updateDatabase()
 
 	def updateDatabase(self):
-		pass
+		# Set them to database values
+		hiddenIdsSize = len(self.hiddenIds)
+		weightMatrixSize = len(self.weightMatrix)
+
+		for i in range(len(self.wordIds)):
+			for j in range(len(self.hiddenIds[0])):
+				self.setStrength(self.wordIds[i], self.hiddenIds[0][j], 1, self.weightMatrix[0][i][j])
+
+		for i in range(hiddenIdsSize - 1):
+			for j in range(len(self.hiddenIds[i + 1])):
+				for k in range(len(self.hiddenIds[i])):
+					
+					self.setStrength(self.hiddenIds[i][k], self.hiddenIds[i + 1][j], i + 2, self.weightMatrix[i + 1][k][j])
+
+		for j in range(len(self.hiddenIds)):
+			for k in range(len(self.urlIds)):
+				self.setStrength(self.hiddenIds[hiddenIdsSize - 1][j], self.urlIds[k], self.layers - 1, self.weightMatrix[weightMatrixSize - 1][j][k])
+
+		self.db.commit()
