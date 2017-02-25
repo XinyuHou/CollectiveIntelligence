@@ -282,7 +282,7 @@ class SearchNet:
 		self.weightMatrix.append(weight1)
 
 		for layer in range(hiddenIdSize - 1):
-			weight = [[self.getStrength(hiddenId1, hiddenId2, layer + 2) for hiddenId1 in self.hiddenIds[layer]] for hiddenId2 in self.hiddenIds[layer + 1]]
+			weight = [[self.getStrength(hiddenId1, hiddenId2, layer + 2) for hiddenId2 in self.hiddenIds[layer + 1]] for hiddenId1 in self.hiddenIds[layer]]
 			self.weightMatrix.append(weight)
 
 		# Weights between last hidden to output
@@ -292,7 +292,38 @@ class SearchNet:
 		print self.weightMatrix
 
 	def feedForward(self):
-		pass
+		# The only inputs are the query words
+		for i in range(len(self.wordIds)):
+			self.inputOut[i] = 1.0
+
+		# Between input and hidden1
+		for j in range(len(self.hiddenOut[0])):
+			sum = 0.0
+			for i in range(len(self.wordIds)):
+				sum = sum + self.inputOut[i] * self.weightMatrix[0][i][j]
+			self.hiddenOut[0][j] = tanh(sum)
+
+		# Between hidden1 and hiddenN
+		for k in range(len(self.hiddenOut) - 1):
+
+			for j in range(len(self.hiddenOut[k + 1])):
+				print "j: ",j
+				sum = 0.0
+				for i in range(len(self.hiddenOut[k])):
+					sum = sum + self.hiddenOut[k][i] * self.weightMatrix[k + 1][i][j]
+				self.hiddenOut[k + 1][j] = tanh(sum)
+
+		# Between hiddenN and output
+		for k in range(len(self.urlIds)):
+			sum = 0.0
+			hiddenOutSize = len(self.hiddenOut)
+			weightMatrixSize = len(self.weightMatrix)
+			for j in range(len(self.hiddenOut[hiddenOutSize - 1])):
+				sum = sum + self.hiddenOut[hiddenOutSize - 1][j] * self.weightMatrix[weightMatrixSize - 1][j][k]
+
+			self.outputOut[k] = tanh(sum)
+
+		return self.outputOut[:]
 
 	def getResult(self, wordIds, urlIds):
 		self.setupNetwork(wordIds, urlIds)
