@@ -9,7 +9,7 @@ people = [('Seymour', 'BOS'),
 		('Buddy', 'ORD'),
 		('Les', 'OMA'),]
 
-destubatuib = 'LGA'
+destination = 'LGA'
 
 flights = {}
 for line in file('Schedule.txt'):
