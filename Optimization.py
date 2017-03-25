@@ -21,3 +21,15 @@ for line in file('Schedule.txt'):
 def getMinutes(t):
 	x = time.striptime(t, '%H:%M')
 	return x[3] * 60 + x[4]
+
+def printSchedule(r):
+	for d in range(0, len(r), 2):
+		name = people[d][0]
+		origin = people[d][1]
+		out = flights[(origin, destination)][r[2 * d]]
+		ret = flights[(origin, destination)][r[2 * d + 1]]
+
+		print '%10s%10s %5s-%5s $%3s %5s-%5s $%3s' % (name, origin,
+														out[0], out[1], out[2],
+														ret[0], ret[1], ret[2])
+		
