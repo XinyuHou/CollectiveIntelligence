@@ -144,3 +144,46 @@ def annealingOptimize(domain, costf, T = 10000.0, cool = 0.95, step = 1):
 		T = T * cool
 
 	return vec
+
+def geneticOptimize(domain, costf, popSize = 50, step = 1, mutPorb = 0.2, elite = 0.2, maxIter = 100):
+	# Mutation
+	def mutate(vec):
+		i = random.randint(0, len(domain) - 1)
+		if random.random() < 0.5 and vec[i] > domain[i][0]:
+			return vec[0 : i] + [vec[i] - step] + vec[i + 1 :]
+		elif vec[i] < domain[i][1]:
+			return vec[0 : i] + [vec[i] + step] + vec[i + 1 :]
+		return vec
+
+	# Crossover
+	def crossover(r1, r2):
+		i = random.randint(1, len(domain) - 2)
+
+		return r1[0 : i] + r2[i :]
+
+	# Initial population
+	pop = []
+	for i in range(popSize):
+		vec = [random.randint(domain[i][0], domain[i][1]) for i in range(len(domain))]
+		pop.append(vec)
+
+	topElite = int(elite * popSize)
+
+	for i in range(maxIter):
+		scores = [(costf(v), v) for v in pop]
+		scores.sort()
+		ranked = [v for (s, v) in scores]
+
+		pop = ranked[0 : topElite]
+
+		while len(pop) < popSize:
+			if random.random() < mutPorb:
+				c = random.randint(0, topElite)
+				pop.append(mutate(ranked[c]))
+			else:
+				c1 = random.randint(0, topElite)
+				c2 = random.randint(0, topElite)
+				pop.append(crossover(ranked[c1], ranked[c2]))
+		print scores[0][0]
+
+	return scores[0][1]
