@@ -39,7 +39,18 @@ def crossCount(v):
 			ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / float(den)
 			ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / float(den)
 			if ua > 0 and ua < 1 and ub > 0 and ub < 1:
-				total += 1	
+				total += 1
+
+	for i in range(len(people)):
+		for j in range(i + 1, len(people)):
+			# Get the locations of the two nodes
+			(x1, y1),(x2, y2)=loc[people[i]], loc[people[j]]
+
+			# Find the distance between them
+			dist = math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2))
+			# Penalize any nodes closer than 50 pixels
+			if dist < 50:
+				total += (1.0 - (dist / 50.0))		
 
 	return total
 
