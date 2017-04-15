@@ -124,6 +124,18 @@ def hillClimb(domain, costf):
 
 	return sol
 
+def randomStartPointsAnnealing(domain, costf, random_times = 3):
+	sol = []
+	bestSolScore = 99999999;
+	for i in range(random_times):
+		s = annealingOptimize(domain, costf)
+		score = scheduleCost(s)
+		if (bestSolScore > score):
+			bestSolScore = score
+			sol = s
+
+	return sol
+
 def annealingOptimize(domain, costf, T = 10000.0, cool = 0.95, step = 1):
 	# Initialize the values randomly
 	vec = [float(random.randint(domain[i][0], domain[i][1])) for i in range(len(domain))]
