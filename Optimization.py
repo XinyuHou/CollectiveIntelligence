@@ -26,8 +26,8 @@ def printSchedule(r):
 	for d in range(len(r) / 2):
 		name = people[d][0]
 		origin = people[d][1]
-		out = flights[(origin, destination)][r[2 * d]]
-		ret = flights[(origin, destination)][r[2 * d + 1]]
+		out = flights[(origin, destination)][int(r[2 * d])]
+		ret = flights[(origin, destination)][int(r[2 * d + 1])]
 
 		print '%10s%10s %5s-%5s $%3s %5s-%5s $%3s' % (name, origin,
 														out[0], out[1], out[2],
@@ -43,10 +43,23 @@ def scheduleCost(sol):
 		origin = people[d][1]
 		outbound = flights[(origin, destination)][int(sol[2 * d])]
 		returnf = flights[(origin, destination)][int(sol[2 * d + 1])]
+		outDepTime = outbound[0]
+		returnDepTime = returnf[0]
+		outFlightTime = getMinutes(outbound[1]) - getMinutes(outbound[0])
+		returnFlightTime = getMinutes(returnf[1]) - getMinutes(returnf[0])
 
 		# Total price is the price of tall outbound and return flights
 		totalPrice += outbound[2]
 		totalPrice += returnf[2]
+		totalPrice += outFlightTime * 0.5;
+		totalPrice += returnFlightTime * 0.5;
+
+		eightAM = getMinutes('8:00')
+		if getMinutes(outDepTime) < eightAM:
+			totalPrice += 20
+
+		if getMinutes(returnDepTime) < eightAM:
+			totalPrice += 20
 
 		# Track the latest arrival tand the earliest departure
 		if latestArrival < getMinutes(outbound[1]):
