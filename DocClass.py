@@ -53,6 +53,18 @@ class classifier:
 
 		return self.featureCount(f, cat) / self.itemCountInCat(cat)
 
+	def weightedProb(self, f, cat, prf, weight = 1.0, assumedProb = 0.5):
+		basicProb = prf(f, cat)
+
+		total = sum([self.featureCount(f, c) for c in self.categories()])
+
+		# a weight of 1 means the assumed probability is weighted the same as one word
+		# (weight * assumedProb) => the assumed appear time in this cat
+		# (total * basicProb) => the average appear time in this cat
+		# (weight + total) => total appear time
+		bp = ((weight * assumedProb) + (total * basicProb)) / (weight + total)
+		return bp
+
 def sampleTrain(cl):
 	cl.train('Nobody owns the water.', 'good')
 	cl.train('the quick rabbit jumps fences', 'good')
