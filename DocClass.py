@@ -8,6 +8,13 @@ def getWords(doc):
 
 	return dict([(w, 1) for w in words])
 
+def sampleTrain(cl):
+	cl.train('Nobody owns the water.', 'good')
+	cl.train('the quick rabbit jumps fences', 'good')
+	cl.train('the quick brown fox jumps', 'good')
+	cl.train('buy pharmaceuticals now', 'bad')
+	cl.train('make quick money at the online casino', 'bad')
+	
 class classifier:
 	def __init__(self, getFeatures, filename = None):
 		self.featureCatCount = {}
@@ -64,10 +71,3 @@ class classifier:
 		# (weight + total) => total appear time
 		bp = ((weight * assumedProb) + (total * basicProb)) / (weight + total)
 		return bp
-
-def sampleTrain(cl):
-	cl.train('Nobody owns the water.', 'good')
-	cl.train('the quick rabbit jumps fences', 'good')
-	cl.train('the quick brown fox jumps', 'good')
-	cl.train('buy pharmaceuticals now', 'bad')
-	cl.train('make quick money at the online casino', 'bad')
