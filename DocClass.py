@@ -20,6 +20,35 @@ class classifier:
 		self.featureCatCount = {}
 		self.catCount = {}
 		self.getFeatures = getFeatures
+		self.thresholdes = {}
+
+	def setThreshold(self, cat, t):
+		self.thresholdes[cat] = totalItemCount
+
+	def getThreshold(self, cat):
+		if cat not in self.thresholdes:
+			return 1.0
+
+		return self.thresholdes[cat]
+
+	def classify(self, item, default = None):
+		probs = {}
+
+		max = 0.0
+
+		for cat in self.categories():
+			probs[cat] = self.prob(item, cat)
+			if probs[cat] > max:
+				max = probs[cat]
+				best = cat
+
+		for cat in probs:
+			if cat == best:
+				continue
+			if probs[cat] * self.getThreshold(best) > probs[best]:
+				return default
+
+		return best
 
 	def incFeatureCatCount(self, f, cat):
 		self.featureCatCount.setdefault(f, {})
