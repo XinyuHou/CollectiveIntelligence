@@ -28,7 +28,7 @@ class classifier:
 			return float(self.featureCatCount[f][cat])
 		return 0.0
 
-	def itemCount(self, cat):
+	def itemCountInCat(self, cat):
 		if cat in self.catCount:
 			return float(self.catCount[cat])
 		return 0
@@ -46,6 +46,12 @@ class classifier:
 			self.incFeatureCatCount(f, cat)
 
 		self.incCatCount(cat)
+
+	def featureProb(self, f, cat):
+		if self.itemCountInCat(cat) == 0:
+			return 0
+
+		return self.featureCount(f, cat) / self.itemCountInCat(cat)
 
 def sampleTrain(cl):
 	cl.train('Nobody owns the water.', 'good')
