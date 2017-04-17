@@ -46,4 +46,10 @@ class classifier:
 			self.incFeatureCatCount(f, cat)
 
 		self.incCatCount(cat)
-		
+
+def sampleTrain(cl):
+	cl.train('Nobody owns the water.', 'good')
+	cl.train('the quick rabbit jumps fences', 'good')
+	cl.train('the quick brown fox jumps', 'good')
+	cl.train('buy pharmaceuticals now', 'bad')
+	cl.train('make quick money at the online casino', 'bad')
