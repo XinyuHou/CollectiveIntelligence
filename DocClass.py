@@ -117,3 +117,39 @@ class naiveBayes(classifier):
 		docProb = self.docProb(item, cat)
 
 		return docProb * catProb
+
+class fisherClassifier(classifier):
+	def catProb(self, f, cat):
+		freInThisCat = self.featureProb(f, cat)
+		if freInThisCat == 0:
+			return 0
+
+		freSum = sum([self.featureProb(f, c) for c in self.categories()])
+
+		p = freInThisCat / freSum
+
+		return p
+
+	def fisherProb(self, item, cat):
+		p = 1
+		features = self.getFeatures(item)
+
+		for f in features:
+			p *= (self.weightedProb(f, cat, self.catProb))
+
+		fScore = -2 * math.log(p)
+
+		return self.invChi2(fScore, len(features) * 2)
+
+	def invChi2(self, chi, df):
+		m = chi / 2.0
+		print 'm: %f' % m
+		sum = term = math.exp(-m)
+		print 'sum&term: %f' % sum
+		for i in range(1, df // 2):
+			print 'i: %d' % i
+			term *= m / i
+			print 'term: %f' % term
+			sum += term
+
+		return min(sum, 1.0)
