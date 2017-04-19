@@ -119,6 +119,19 @@ class naiveBayes(classifier):
 		return docProb * catProb
 
 class fisherClassifier(classifier):
+	def __init__(self, getFeatures):
+		classifier.__init__(self, getFeatures)
+		self.minimums = {}
+
+	def setMinimum(self, cat, min):
+		self.minimums[cat] = min
+
+	def getMinimum(self, cat):
+		if cat not in self.minimums:
+			return 0;
+
+		return self.minimums[cat]
+
 	def catProb(self, f, cat):
 		freInThisCat = self.featureProb(f, cat)
 		if freInThisCat == 0:
@@ -153,3 +166,15 @@ class fisherClassifier(classifier):
 			sum += term
 
 		return min(sum, 1.0)
+
+	def classify(self, item, default = None):
+		best = default
+		max = 0.0
+		for c in self.categories():
+			p = self.fisherProb(item, c)
+
+			if p > self.getMinimum(c) and p > max:
+				best = c
+				max = p
+
+		return best
