@@ -1,5 +1,6 @@
 import re
 import math
+import sqlite3 as sqlite
 
 def getWords(doc):
 	splitter = re.compile('\\W*')
@@ -21,6 +22,11 @@ class classifier:
 		self.catCount = {}
 		self.getFeatures = getFeatures
 		self.thresholdes = {}
+
+	def setDB(self, dbFile):
+		self.con = sqlite.connect(dbFile)
+		self.con.execute('create table if not exists fc(feature, category, count)')
+		self.con.execute('create table if not exists cc(category, count)')
 
 	def setThreshold(self, cat, t):
 		self.thresholdes[cat] = totalItemCount
@@ -51,29 +57,56 @@ class classifier:
 		return best
 
 	def incFeatureCatCount(self, f, cat):
-		self.featureCatCount.setdefault(f, {})
-		self.featureCatCount[f].setdefault(cat, 0)
-		self.featureCatCount[f][cat] += 1
+		# self.featureCatCount.setdefault(f, {})
+		# self.featureCatCount[f].setdefault(cat, 0)
+		# self.featureCatCount[f][cat] += 1
+		count = self.featureCount(f, cat)
+		if count == 0:
+			self.con.execute("insert into fc values ('%s', '%s', 1)" % (f, cat))
+		else:
+			self.con.execute("update fc set count = %d where feature = '%s' and category = '%s'" % (count + 1, f, cat))
 
 	def incCatCount(self, cat):
-		self.catCount.setdefault(cat, 0)
-		self.catCount[cat] += 1
+		# self.catCount.setdefault(cat, 0)
+		# self.catCount[cat] += 1
+		count = self.itemCountInCat(cat)
+		if count == 0:
+			self.con.execute("insert into cc values ('%s', 1)" % (cat))
+		else:
+			self.con.execute("update cc set count = %d where category = '%s'" % (count + 1, cat))
 
 	def featureCount(self, f, cat):
-		if f in self.featureCatCount and cat in self.featureCatCount[f]:
-			return float(self.featureCatCount[f][cat])
-		return 0.0
+		# if f in self.featureCatCount and cat in self.featureCatCount[f]:
+		# 	return float(self.featureCatCount[f][cat])
+		# return 0.0
+		res = self.con.execute("select count from fc where feature = '%s' and category = '%s'" % (f, cat)).fetchone()
+		if res == None:
+			return 0
+		else:
+			return float(res[0])
 
 	def itemCountInCat(self, cat):
-		if cat in self.catCount:
-			return float(self.catCount[cat])
-		return 0
+		# if cat in self.catCount:
+		# 	return float(self.catCount[cat])
+		# return 0
+		res = self.con.execute("select count from cc where category = '%s'" % (cat)).fetchone()
+		if res == None:
+			return 0
+		else:
+			return float(res[0])
 
 	def totalItemCount(self):
-		return sum(self.catCount.values())
+		# return sum(self.catCount.values())
+		res = self.con.execute("select sum(count) from cc").fetchone()
+		if res == None:
+			return 0
+		else:
+			return res[0]
 
 	def categories(self):
-		return self.catCount.keys()
+		# return self.catCount.keys()
+		cur = self.con.execute('select category from cc')
+		return [d[0] for d in cur]
 
 	def train(self, item, cat):
 		features = self.getFeatures(item)
@@ -82,6 +115,7 @@ class classifier:
 			self.incFeatureCatCount(f, cat)
 
 		self.incCatCount(cat)
+		self.con.commit()
 
 	def featureProb(self, f, cat):
 		if self.itemCountInCat(cat) == 0:
