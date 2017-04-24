@@ -114,4 +114,42 @@ def printTree(tree, indent = ''):
 		print indent + 'F -> ',
 		printTree(tree.fb, indent + '	')
 
+def getWidth(tree):
+	if tree.tb == None and tree.fb == None: return 1
 
+	return getWidth(tree.tb) + getWidth(tree.fb)
+
+def getDepth(tree):
+	if tree.tb == None and tree.fb == None: return 0
+
+	return max(getDepth(tree.tb), getDepth(tree.fb)) + 1
+
+from PIL import Image, ImageDraw
+def drawTree(tree, bmp = 'DecisionTree.bmp'):
+	w = getWidth(tree) * 100
+	h = getDepth(tree) * 100 + 120
+
+	img = Image.new('RGB', (w, h), (255, 255, 255))
+	draw = ImageDraw.Draw(img)
+
+	drawNode(draw, tree, w / 2, 20)
+	img.save(bmp)
+
+def drawNode(draw, tree, x, y):
+	if tree.results == None:
+		w1 = getWidth(tree.fb) * 100
+		w2 = getWidth(tree.tb) * 100
+
+		left = x - (w1 + w2) / 2
+		right = x + (w1 + w2) / 2
+
+		draw.text((x - 20, y - 10), str(tree.col) + ':' + str(tree.value), (0, 0, 0))
+
+		draw.line((x, y, left + w1 / 2, y + 100), fill = (255, 0, 0))
+		draw.line((x, y, right - w2 / 2, y + 100), fill = (255, 0, 0))
+
+		drawNode(draw, tree.fb, left + w1 / 2, y + 100)
+		drawNode(draw, tree.tb, right - w2 / 2, y + 100)
+	else:
+		txt = '\n'.join(['%s : %d' %v for v in tree.results.items()])
+		draw.text((x - 20, y), txt, (0, 0, 0))
