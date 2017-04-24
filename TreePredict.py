@@ -20,3 +20,13 @@ def divideSet(rows, column, value):
 
 	return (set1, set2)
 
+def uniqueCounts(rows):
+	results = {}
+	for row in rows:
+		r = row[len(row) - 1]
+		if r not in results:
+			results[r] = 0
+
+		results[r] += 1
+
+	return results
