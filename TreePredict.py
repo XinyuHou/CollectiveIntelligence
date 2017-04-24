@@ -101,3 +101,17 @@ def buildTree(rows, scoreF = entropy):
 	else:
 		return DecisionNode(results = uniqueCounts(rows))
 
+def printTree(tree, indent = ''):
+	if tree.results != None:
+		print str(tree.results)
+
+	else:
+		print str(tree.col) + ':' + str(tree.value) + '? '
+
+		print indent + 'T -> ',
+		printTree(tree.tb, indent + '	')
+
+		print indent + 'F -> ',
+		printTree(tree.fb, indent + '	')
+
+
