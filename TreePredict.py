@@ -48,3 +48,17 @@ def giniImpurity(rows):
 			imp += p1 * p2
 
 	return imp
+
+# Entropy is the sum of p(x)log(p(x)) accross all the different possible results
+def entropy(rows):
+	from math import log
+	log2 = lambda x: log(x) / log(2)
+
+	results = uniqueCounts(rows)
+
+	ent = 0.0
+	for r in results.keys():
+		p = float(results[r]) / len(rows)
+		ent = ent - p * log2(p)
+
+	return ent
