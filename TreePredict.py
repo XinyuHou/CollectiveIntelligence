@@ -227,3 +227,11 @@ def missingDataClassify(observation, tree):
 
 			return missingDataClassify(observation, branch)
 
+def variance(rows):
+	if len(rows) == 0:
+		return 0
+
+	data = [float(row[len(row) - 1]) for row in rows]
+	mean = sum(data) / len(data)
+	variance = sum([(d - mean) ** 2 for d in data]) / len(data)
+	return variance
