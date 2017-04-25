@@ -193,3 +193,37 @@ def prune(tree, minGain):
 		if delta < minGain:
 			tree.tb, tree.fb = None, None
 			tree.results = uniqueCounts(tb + fb)
+
+def missingDataClassify(observation, tree):
+	if tree.results != None:
+		return tree.results
+	else:
+		v = observation[tree.col]
+		if v == None:
+			tr, fr = missingDataClassify(observation, tree.tb), missingDataClassify(observation, tree.fb)
+			tCount = sum(tr.values())
+			fCount = sum(fr.values())
+			tw = float(tCount) / (tCount + fCount)
+			fw = float(fCount) / (tCount + fCount)
+
+			result = {}
+
+			for k, v in tr.items():
+				result[k] = v * tw
+			for k, v in fr.items():
+				result[k] = result.setdefault(k, 0) + (v * fw)
+			return result
+		else:
+			if isinstance(v, int) or isinstance(v, float):
+				if v >= tree.values:
+					branch = tree.tb
+				else:
+					branch = tree.fb
+			else:
+				if v == tree.value:
+					branch = tree.tb
+				else:
+					branch = tree.fb
+
+			return missingDataClassify(observation, branch)
+
