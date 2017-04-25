@@ -173,3 +173,23 @@ def classify(observation, tree):
 				branch = tree.fb
 
 		return classify(observation, branch)
+
+def prune(tree, minGain):
+	if tree.tb.results == None:
+		prune(tree.tb, minGain)
+	if tree.fb.results == None:
+		prune(tree.fb, minGain)
+
+	if tree.tb.results != None and tree.fb.results != None:
+		tb, fb = [], []
+
+		for v, c in tree.tb.results.items():
+			tb += [[v]] * c
+		for v, c in tree.fb.results.items():
+			fb += [[v]] * c
+
+		delta = entropy(tb + fb) - (entropy(tb) + entropy(fb))
+
+		if delta < minGain:
+			tree.tb, tree.fb = None, None
+			tree.results = uniqueCounts(tb + fb)
