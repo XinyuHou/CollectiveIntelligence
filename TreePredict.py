@@ -215,7 +215,7 @@ def missingDataClassify(observation, tree):
 			return result
 		else:
 			if isinstance(v, int) or isinstance(v, float):
-				if v >= tree.values:
+				if v >= tree.value:
 					branch = tree.tb
 				else:
 					branch = tree.fb
@@ -235,3 +235,62 @@ def variance(rows):
 	mean = sum(data) / len(data)
 	variance = sum([(d - mean) ** 2 for d in data]) / len(data)
 	return variance
+
+def missingRangeDataClassify(observation, tree):
+	if tree.results != None:
+		return tree.results
+	else:
+		v = observation[tree.col]
+		if v == None:
+			tr, fr = missingRangeDataClassify(observation, tree.tb), missingRangeDataClassify(observation, tree.fb)
+			tCount = sum(tr.values())
+			fCount = sum(fr.values())
+			tw = float(tCount) / (tCount + fCount)
+			fw = float(fCount) / (tCount + fCount)
+
+			result = {}
+
+			for k, v in tr.items():
+				result[k] = v * tw
+			for k, v in fr.items():
+				result[k] = result.setdefault(k, 0) + (v * fw)
+			return result
+		elif type(v) is tuple:
+			if isinstance(v[0], int) or isinstance(v[0], float) and isinstance(v[1], int) or isinstance(v[1], float):
+				min = float(v[0])
+				max = float(v[1])
+				if float(tree.value) > max:
+					branch = tree.fb
+					return missingRangeDataClassify(observation, branch)
+				elif float(tree.value) <= min:
+					branch = tree.tb
+					return missingRangeDataClassify(observation, branch)
+				else:
+					tr, fr = missingRangeDataClassify(observation, tree.tb), missingRangeDataClassify(observation, tree.fb)
+					tCount = sum(tr.values())
+					fCount = sum(fr.values())
+					tw = float(tCount) / (tCount + fCount)
+					fw = float(fCount) / (tCount + fCount)
+					tp = float(max - float(tree.value)) / (max - min) 
+					fp = float(float(tree.value) - min) / (max - min) 
+
+					result = {}
+
+					for k, v in tr.items():
+						result[k] = v * tw * tp
+					for k, v in fr.items():
+						result[k] = result.setdefault(k, 0) + (v * fw * fp)
+					return result
+
+		else:
+			if isinstance(v, int) or isinstance(v, float):
+				if v >= tree.value:
+					branch = tree.tb
+				else:
+					branch = tree.fb
+			else:
+				if v == tree.value:
+					branch = tree.tb
+				else:
+					branch = tree.fb
+			return missingRangeDataClassify(observation, branch)
