@@ -294,3 +294,42 @@ def missingRangeDataClassify(observation, tree):
 				else:
 					branch = tree.fb
 			return missingRangeDataClassify(observation, branch)
+
+def buildTreeEarlyStop(rows, scoreF = entropy, minGain = 0.1):
+	if len(rows) == 0:
+		return DecisionNode()
+
+	currentScore = scoreF(rows)
+
+	# Setup some variables to track the best criteria
+	bestGain = 0.0
+	bestCriteria = None
+	bestSets = None
+
+	columnCount = len(rows[0]) - 1
+
+	for col in range(0, columnCount):
+		columnValues = {}
+
+		for row in rows:
+			columnValues[row[col]] = 1
+
+		for value in columnValues.keys():
+			(set1, set2) = divideSet(rows, col, value)
+
+			p = float(len(set1)) / len(rows)
+			gain = currentScore - p * scoreF(set1) - (1- p) * scoreF(set2)
+
+			if gain > bestGain and len(set1) > 0 and len(set2) > 0:
+				bestGain = gain
+				bestCriteria = (col, value)
+				bestSets = (set1, set2)
+
+	if bestGain > minGain:
+		trueBranch = buildTreeEarlyStop(bestSets[0])
+		falseBranch = buildTreeEarlyStop(bestSets[1])
+		return DecisionNode(col = bestCriteria[0], value = bestCriteria[1], tb = trueBranch, fb = falseBranch)
+
+	else:
+		return DecisionNode(results = uniqueCounts(rows))
+
