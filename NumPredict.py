@@ -57,3 +57,17 @@ def KNN(data, vec1, k = 5):
 
 	avg = avg / k
 	return avg
+
+def inverseWeight(dist, num = 1.0, const = 0.1):
+	return num / (dist + const)
+
+def subtractWeight(dist, const = 1.0):
+	if dist > const:
+		return 0
+	else:
+		return const - dist
+
+def gaussian(dist, sigma = 10.0):
+	return math.e ** (-dist ** 2 / (2 * sigma ** 2))
+
+
