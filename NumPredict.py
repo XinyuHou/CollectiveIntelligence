@@ -85,4 +85,29 @@ def weightedKNN(data, vec1, k = 5, weightF = gaussian):
 	avg = avg / totalWeight
 	return avg
 
+def divideData(data, test = 0.05):
+	trainSet = []
+	testSet = []
+	for row in data:
+		if random() < test:
+			testSet.append(row)
+		else:
+			trainSet.append(row)
+	return trainSet, testSet
 
+def testAlgorithm(algF, trainSet, testSet):
+	error = 0.0
+
+	for row in testSet:
+		guess = algF(trainSet, row['input'])
+		error += (row['result'] - guess) ** 2
+
+	return error / len(testSet)
+
+def crossValidate(algF, data, trials = 100, test = 0.05):
+	error = 0.0
+	for i in range(trials):
+		trainSet, testSet = divideData(data, test)
+		error += testAlgorithm(algF, trainSet, testSet)
+
+	return error / trials
