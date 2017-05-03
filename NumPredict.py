@@ -116,7 +116,7 @@ def wineSet2():
 	rows = []
 
 	for i in range(300):
-		rating = randoom() * 50 + 50
+		rating = random() * 50 + 50
 		age = random() * 50
 
 		aisle = float(randint(1, 20))
@@ -127,3 +127,12 @@ def wineSet2():
 		rows.append({'input': (rating, age, aisle, bottleSize), 'result': price})
 
 	return rows
+
+def rescale(data, scale):
+	scaleData = []
+	for row in data:
+		scaled = [scale[i] * row['input'][i] for i in range(len(scale))]
+		scaleData.append({'input': scaled, 'result': row['result']})
+
+	return scaleData
+	
