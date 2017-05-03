@@ -135,4 +135,11 @@ def rescale(data, scale):
 		scaleData.append({'input': scaled, 'result': row['result']})
 
 	return scaleData
-	
+
+def createCostFunction(algF, data):
+	def costF(scale):
+		sdata = rescale(data, scale)
+		return crossValidate(algF, sdata, trials = 10)
+	return costF
+
+weightDomain = [(0, 20)] * 4
