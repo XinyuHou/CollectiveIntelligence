@@ -143,3 +143,30 @@ def createCostFunction(algF, data):
 	return costF
 
 weightDomain = [(0, 20)] * 4
+
+def wineSet3():
+	rows = wineSet1()
+	for row in rows:
+		if random() < 0.5:
+			row['result'] *= 0.6
+	return rows
+
+def probGuess(data, vec1, low, high, k = 5, weightF = gaussian):
+	dList = getDistances(data, vec1)
+	nWeight = 0.0
+	tWeight = 0.0
+
+	for i in range(k):
+		dist = dList[i][0]
+		idx = dList[i][1]
+		weight = weightF(dist)
+		v = data[idx]['result']
+
+		if v >= low and v <= high:
+			nWeight += weight
+		tWeight += weight
+
+	if tWeight == 0:
+		return 0
+
+	return nWeight / tWeight
