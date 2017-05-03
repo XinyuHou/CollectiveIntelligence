@@ -170,3 +170,11 @@ def probGuess(data, vec1, low, high, k = 5, weightF = gaussian):
 		return 0
 
 	return nWeight / tWeight
+
+from pylab import * 
+
+def cumulativeGraph(data, vec1, high, k = 5, weightF = gaussian):
+	t1 = arange(0.0, high, 0.1)
+	cprob = array([probGuess(data, vec1, 0, v, k, weightF) for v in t1])
+	plot(t1, cprob)
+	show()
