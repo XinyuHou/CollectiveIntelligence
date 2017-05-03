@@ -178,3 +178,21 @@ def cumulativeGraph(data, vec1, high, k = 5, weightF = gaussian):
 	cprob = array([probGuess(data, vec1, 0, v, k, weightF) for v in t1])
 	plot(t1, cprob)
 	show()
+
+def probabilityGraph(data, vec1, high, k = 5, weightF = gaussian, ss = 5.0):
+	t1 = arange(0.0, high, 0.1)
+
+	probs = [probGuess(data, vec1, v, v + 0.1, k, weightF) for v in t1]
+
+	smoothed = []
+	for i in range(len(probs)):
+		sv = 0.0
+		for j in range(0, len(probs)):
+			dist = abs(i - j) * 0.1
+			weight = gaussian(dist, sigma = ss)
+			sv += weight * probs[j]
+		smoothed.append(sv)
+	smoothed = array(smoothed)
+
+	plot(t1, smoothed)
+	show()
