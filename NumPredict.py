@@ -215,3 +215,14 @@ def optimizeKNN(data):
 	domain = [(1,10)]
 	newCostF = createKNNCostFunc(data)
 	print Optimization.annealingOptimize(domain, newCostF, step = 2)
+
+def leaveOneOutCrossValidate(algF, data):
+	error = 0.0
+
+	for i in range(len(data)):
+		trainSet = data[:i] + data[i+1:]
+		guess = algF(trainSet, data[i]['input'])
+		error += (data[i]['result'] - guess) ** 2
+
+	return error / len(data)
+	
