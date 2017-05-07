@@ -139,6 +139,7 @@ def randomStartPointsAnnealing(domain, costf, random_times = 3):
 def annealingOptimize(domain, costf, T = 10000.0, cool = 0.95, step = 1):
 	# Initialize the values randomly
 	vec = [float(random.randint(domain[i][0], domain[i][1])) for i in range(len(domain))]
+
 	while T > 0.1:
 		# Choose one of the indices
 		i = random.randint(0, len(domain) - 1)

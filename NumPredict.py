@@ -1,5 +1,6 @@
 from random import random, randint
 import math
+import Optimization
 
 def winePrice(rating, age):
 	peak_age = rating - 50
@@ -50,6 +51,9 @@ def getDistances(data, vec1):
 def KNN(data, vec1, k = 5):
 	dList = getDistances(data, vec1)
 	avg = 0.0
+
+	if isinstance(k, list):
+		k = int(k[0])
 
 	for i in range(k):
 		idx = dList[i][1]
@@ -196,3 +200,18 @@ def probabilityGraph(data, vec1, high, k = 5, weightF = gaussian, ss = 5.0):
 
 	plot(t1, smoothed)
 	show()
+
+def createKNNCostFunc(data):
+	def costf(k):
+		def newknn(d, v):
+			return KNN(d, v, k)
+		return crossValidate(newknn, data, trials = 10)
+
+	return costf
+
+import Optimization
+
+def optimizeKNN(data):
+	domain = [(1,10)]
+	newCostF = createKNNCostFunc(data)
+	print Optimization.annealingOptimize(domain, newCostF, step = 2)
