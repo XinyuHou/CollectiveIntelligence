@@ -59,4 +59,23 @@ def dotProductClassify(point, avgs):
 		return 0
 	else:
 		return 1
-		
+
+def yesNo(v):
+	if v == 'yes':
+		return 1
+	elif v == 'no':
+		return -1
+	else:
+		return 0
+
+def matchCount(interest1, interest2):
+	l1 = interest1.split(':')
+	l2 = interest2.split(':')
+	x = 0
+	for v in l1:
+		if v in l2:
+			x += 1
+	return x
+
+
+
