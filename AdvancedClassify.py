@@ -77,5 +77,43 @@ def matchCount(interest1, interest2):
 			x += 1
 	return x
 
+# Yahoo geo service api
+# yahooKey = ''
+# from xml.dom.minidom import parseString
+# from urllib import urlopen, quote_plus
 
+# loc_cache = {}
+def getLocation(address):
+	# if address in loc_cache:
+	# 	return loc_cache[address]
+	# query = 'http://where.yahooapis.com/geocode?q=%s&appid=%s' % (quote_plus(address), yahooKey)
+	# print query
+	# data = urlopen(query).read()
+
+	# doc = parseString(data)
+	# lat = doc.getElementByTagName('Latitude')[0].firstChild.nodeValue
+	# long = doc.getElementByTagName('Longitude')[0].firstChild.nodeValue
+	# loc_cache[address] = (float(lat), float(long))
+
+	# return loc_cache[address]
+
+	return 0,0
+
+def milesDistance(a1, a2):
+	lat1, long1 = getLocation(a1)
+	lat2, long2 = getLocation(a2)
+
+	latDif = 69.1 * (lat2 - lat1)
+	longDif = 53.0 * (long2 - long1)
+	return (latDif ** 2 + longDif ** 2) ** .5
+
+def loadNumerical():
+	oldRows = loadMatch('MatchMaker.csv')
+	newRows = []
+	for row in oldRows:
+		d = row.data
+		data = [float(d[0]), yesNo(d[1]), yesNo(d[2]), float(d[5]), yesNo(d[6]), yesNo(d[7]), matchCount(d[3], d[8]), milesDistance(d[4], d[9]), row.match]
+		newRows.append(MatchRow(data))
+
+	return newRows
 
