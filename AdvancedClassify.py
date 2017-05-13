@@ -117,3 +117,21 @@ def loadNumerical():
 
 	return newRows
 
+def scaleData(rows):
+	low = [9999999.0] * len(rows[0].data)
+	high = [-9999999.0] * len(rows[0].data)
+
+	for row in rows:
+		d = row.data
+		for i in range(len(d)):
+			if d[i] < low[i]: low[i] = d[i]
+			if d[i] > high[i]: high[i] = d[i]
+
+	def scaleInput(mr):
+		return [(mr.data[i] - low[i]) / (high[i] - low[i] + 0.0001) for i in range(len(low))]
+
+	newRows = [MatchRow(scaleInput(row) + [row.match]) for row in rows]
+
+	return newRows, scaleInput
+
+
