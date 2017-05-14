@@ -60,6 +60,9 @@ def dotProductClassify(point, avgs):
 	else:
 		return 1
 
+def vecLength(v):
+  return sum([p**2 for p in v])
+
 def yesNo(v):
 	if v == 'yes':
 		return 1
@@ -128,10 +131,50 @@ def scaleData(rows):
 			if d[i] > high[i]: high[i] = d[i]
 
 	def scaleInput(mr):
-		return [(mr.data[i] - low[i]) / (high[i] - low[i] + 0.0001) for i in range(len(low))]
+		return [(mr[i] - low[i]) / (high[i] - low[i] + 0.0001) for i in range(len(low))]
 
-	newRows = [MatchRow(scaleInput(row) + [row.match]) for row in rows]
+	newRows = [MatchRow(scaleInput(row.data) + [row.match]) for row in rows]
 
 	return newRows, scaleInput
 
+def radialBasisFunction(v1, v2, gamma = 20):
+	dv = [v1[i] - v2[i] for i in range(len(v1))]
+	l = vecLength(dv)
+	return math.e ** (-gamma * l)
+
+def nonlinearClassify(point, rows, offset, gamma = 10):
+	sum0 = 0.0
+	sum1 = 0.0
+	count0 = 0
+	count1 = 0
+
+	for row in rows:
+		if row.match == 0:
+			sum0 += radialBasisFunction(point, row.data, gamma)
+			count0 += 1
+		else:
+			sum1 += radialBasisFunction(point, row.data, gamma)
+			count1 += 1
+
+	y = (1.0 / count0) * sum0 - (1.0 / count1) * sum1 + offset
+
+	if y > 0:
+		return 0
+	else:
+		return 1
+
+def getOffset(rows, gamma = 10):
+	l0 = []
+	l1 = []
+
+	for row in rows:
+		if row.match == 0:
+			l0.append(row.data)
+		else:
+			l1.append(row.data)
+
+	sum0 = sum(sum([radialBasisFunction(v1, v2, gamma) for v1 in l0]) for v2 in l0)
+	sum1 = sum(sum([radialBasisFunction(v1, v2, gamma) for v1 in l1]) for v2 in l1)
+
+	return (1.0 / (len(l1) ** 2)) * sum1 - (1.0 / (len(l0) ** 2)) * sum0 
 
