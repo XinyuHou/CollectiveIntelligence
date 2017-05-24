@@ -160,7 +160,7 @@ def drawNode(draw, clust, x, y, scaling, labels):
 
 	else:
 		# If this is an endpoint, draw the item label
-		draw.text((x + 5, y - 7), labels[clust.id], (0, 0, 0))
+		draw.text((x + 5, y - 7), labels[clust.id].encode('utf-8'), (0, 0, 0))
 
 def rotateMatrix(data):
 	newData = []
