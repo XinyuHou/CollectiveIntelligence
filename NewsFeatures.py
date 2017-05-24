@@ -119,5 +119,21 @@ def showFeatures(w, h, titles, wordVec, out = 'Features.txt'):
 
 	return topPatterns, patternNames
 
+def showArticles(titles, topPatterns, patternNames, out = 'Articles.txt'):
+	outFile = file(out, 'w')
+
+	for j in range(len(titles)):
+		outFile.write(titles[j].encode('utf-8') + '\n')
+
+		topPatterns[j].sort()
+		topPatterns[j].reverse()
+
+		for i in range(3):
+			outFile.write(str(topPatterns[j][i][0]) + ' ' + str(patternNames[topPatterns[j][i][1]]) + '\n')
+
+		outFile.write('\n')
+
+	outFile.close()
+
 
 
