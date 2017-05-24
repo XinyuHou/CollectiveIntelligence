@@ -30,10 +30,14 @@ def factorize(v, pc = 10, iter = 50):
 		hd = (transpose(w) * w * h)
 
 		h = matrix(array(h) * array(hn) / array(hd))
+		where_are_NaNs = isnan(h)
+		h[where_are_NaNs] = 0
 
 		wn = (v * transpose(h))
 		wd = (w * h * transpose(h))
 
 		w = matrix(array(w) * array(wn) / array(wd))
+		where_are_NaNs = isnan(w)
+		w[where_are_NaNs] = 0
 
 	return w, h
