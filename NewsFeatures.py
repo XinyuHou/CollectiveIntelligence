@@ -81,5 +81,43 @@ def makeMatrix(allw, articleWords):
 
 	return l1, wordVec
 
+from numpy import *
+def showFeatures(w, h, titles, wordVec, out = 'Features.txt'):
+	outFile = file(out, 'w')
+	pc, wc = shape(h)
+
+	topPatterns = [[] for i in range(len(titles))]
+	patternNames = []
+
+	for i in range(pc):
+		slist = []
+
+		for j in range(wc):
+			slist.append((h[i,j], wordVec[j]))
+
+		slist.sort()
+		slist.reverse()
+
+		n = [s[1] for s in slist[0 : 6]]
+		outFile.write(str(n) + '\n')
+		patternNames.append(n)
+
+		flist = []
+		for j in range(len(titles)):
+			flist.append((w[j,i], titles[j]))
+			topPatterns[j].append((w[j,i], i, titles[j]))
+
+		flist.sort()
+		flist.reverse()
+
+		for f in flist[0 : 3]:
+			outFile.write(str(f) + '\n')
+
+		outFile.write('\n')
+
+	outFile.close()
+
+	return topPatterns, patternNames
+
 
 
