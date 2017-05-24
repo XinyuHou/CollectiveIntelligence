@@ -2,6 +2,9 @@
 BlogData.txt
 *.bmp
 *.db
+*.txt
+*.yaml
+*.apikey
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
