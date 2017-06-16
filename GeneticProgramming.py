@@ -166,14 +166,14 @@ def gridGame(p):
 
 	location.append([(location[0][0] + 2) % 4, (location[0][1] + 2) % 4])
 
-	print (location)
+	#print (location)
 
 	for o in range(50):
 		for i in range(2):
 			locs = location[i][:] + location[1 - i][:]
 			locs.append(lastMove[i])
 			move = p[i].evaluate(locs) % 4
-			print (locs)
+			#print (locs)
 			if lastMove[i] == move:
 				return 1 - i
 
@@ -199,3 +199,27 @@ def gridGame(p):
 			if location[i] == location[1 - i]:
 				return i
 	return -1
+
+def tournament(pl):
+	losses = [0 for p in pl]
+
+	for i in range(len(pl)):
+		for j in range(len(pl)):
+			if i == j:
+				continue
+
+			winner = gridGame([pl[i], pl[j]])
+
+			if winner == 0:
+				losses[j] += 2
+			elif winner == 1:
+				losses[i] += 2
+			elif winner == -1:
+				losses[i] += 1
+				losses[j] += 1
+				pass
+
+	z = zip(losses, pl)
+	lz = list(z)
+	lz.sort(key=lambda x: x[0])
+	return lz
