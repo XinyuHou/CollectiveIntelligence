@@ -223,3 +223,33 @@ def tournament(pl):
 	lz = list(z)
 	lz.sort(key=lambda x: x[0])
 	return lz
+def print_no_newline(string):
+    import sys
+    sys.stdout.write(string)
+    sys.stdout.flush()
+
+class HumanPlayer:
+	def evaluate(self, board):
+		me = tuple(board[0 : 2])
+		others = [tuple(board[x : x + 2]) for x in range(2, len(board) - 1, 2)]
+		print (me)
+		print (others)
+		for i in range(4):
+			row = ''
+			for j in range(4):
+				if (i, j) == me:
+					row += 'O'
+				elif (i, j) == others[0]:
+					row += 'X'
+				else:
+					row += '.'
+
+			print(row)
+
+		print ('Your last move was %d' % board[len(board) - 1])
+		print (' 0')
+		print ('2 3')
+		print (' 1')
+		print ('Enter move:')
+		move = int(input())
+		return move
