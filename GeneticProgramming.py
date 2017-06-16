@@ -81,3 +81,15 @@ def makeRandomTree(pc, maxDepth = 4, fpr = 0.5, ppr = 0.6):
 		return ParamNode(randint(0, pc - 1))
 	else:
 		return ConstNode(randint(0, 10))
+
+def hiddenFunction(x, y):
+	return x ** 2 + 2 * y + 3 * x + 5
+
+def buildHiddenSet():
+	rows = []
+	for i in range(200):
+		x = randint(0, 40)
+		y = randint(0, 40)
+		rows.append([x, y, hiddenFunction(x, y)])
+	return rows
+	
