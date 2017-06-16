@@ -92,4 +92,10 @@ def buildHiddenSet():
 		y = randint(0, 40)
 		rows.append([x, y, hiddenFunction(x, y)])
 	return rows
-	
+
+def scoreFunction(tree, s):
+	dif = 0
+	for data in s:
+		v = tree.evaluate([data[0], data[1]])
+		dif += abs(v - data[2])
+	return dif
