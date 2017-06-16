@@ -18,6 +18,11 @@ class Node:
 		results = [n.evaluate(inp) for n in self.children]
 		return self.function(results)
 
+	def display(self, indent = 0):
+		print ('  ' * indent) + self.name
+		for c in self.children:
+			c.display(indent + 1)
+
 class ParamNode:
 	def __init__(self, idx):
 		self.idx = idx
@@ -25,12 +30,18 @@ class ParamNode:
 	def evaluate(self, inp):
 		return inp[self.idx]
 
+	def display(self, indent = 0):
+		print '%sp%d' % ('  ' * indent, self.idx)
+
 class ConstNode:
 	def __init__(self, v):
 		self.v = v
 
 	def evaluate(self, inp):
 		return self.v
+
+	def display(self, indent = 0):
+		print '%s%d' % ('  ' * indent, self.v)
 
 addw = FuncWrapper(lambda l : l[0] + l[1], 2, 'add')
 subw = FuncWrapper(lambda l : l[0] - l[1], 2, 'subtract')
