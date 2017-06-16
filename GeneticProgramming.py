@@ -155,3 +155,47 @@ def evolve(pc, popSize, rankFunction, maxGen = 500, mutationRate = 0.1, breeding
 		population = newPop
 	scores[0][1].display()
 	return scores[0][1]
+
+# Grid Game
+def gridGame(p):
+	max = (3, 3)
+
+	lastMove = [-1, -1]
+
+	location = [[randint(0, max[0]), randint(0, max[1])]]
+
+	location.append([(location[0][0] + 2) % 4, (location[0][1] + 2) % 4])
+
+	print (location)
+
+	for o in range(50):
+		for i in range(2):
+			locs = location[i][:] + location[1 - i][:]
+			locs.append(lastMove[i])
+			move = p[i].evaluate(locs) % 4
+			print (locs)
+			if lastMove[i] == move:
+				return 1 - i
+
+			lastMove[i] = move
+
+			if move == 0:
+				location[i][0] -= 1
+				if location[i][0] < 0:
+					location[i][0] = 0
+			if move == 1:
+				location[i][0] += 1
+				if location[i][0] > max[0]:
+					location[i][0] = max[0]
+			if move == 2:
+				location[i][1] -= 1
+				if location[i][1] < 0:
+					location[i][1] = 0
+			if move == 3:
+				location[i][1] += 1
+				if location[i][1] > max[1]:
+					location[i][1] = max[1]
+
+			if location[i] == location[1 - i]:
+				return i
+	return -1
