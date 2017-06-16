@@ -102,7 +102,6 @@ def scoreFunction(tree, s):
 
 def mutate(t, pc, prob = 0.1):
 	if random() < prob:
-		print('mutate!!!')
 		return makeRandomTree(pc)
 	else:
 		result = deepcopy(t)
@@ -113,7 +112,6 @@ def mutate(t, pc, prob = 0.1):
 def crossover(t1, t2, prob = 0.7, top = 1):
 	r = random()
 	if r < prob and not top:
-		print ('crossover!!!')
 		return deepcopy(t2)
 	else:
 		result = deepcopy(t1)
@@ -121,3 +119,39 @@ def crossover(t1, t2, prob = 0.7, top = 1):
 			result.children = [crossover(c, choice(t2.children), prob, 0) for c in t1.children]
 
 		return result
+
+def getRankFunction(dataset):
+	def rankFunction(population):
+		scores = [(scoreFunction(t, dataset), t) for t in population]
+		#print (scores)
+		#sorted(scores, key=operator.itemgetter(0))
+		scores.sort(key=lambda x: x[0])
+		return scores
+	return rankFunction
+
+def evolve(pc, popSize, rankFunction, maxGen = 500, mutationRate = 0.1, breedingRate = 0.4, pExp = 0.7, pNew = 0.05):
+	def selectIndex():
+		return int(log(random()) / log(pExp)) % popSize
+
+	population = [makeRandomTree(pc) for i in range(popSize)]
+	for i in range(maxGen):
+		scores = rankFunction(population)
+		print (scores[0][0])
+		if scores[0][0] == 0:
+			break
+
+		newPop = [scores[0][1], scores[1][1]]
+
+		while len(newPop) < popSize:
+			if random() > pNew:
+				newPop.append(mutate(
+								crossover(scores[selectIndex()][1],
+											scores[selectIndex()][1],
+											prob = breedingRate),
+											pc, prob = mutationRate))
+			else:
+				newPop.append(makeRandomTree(pc))
+		
+		population = newPop
+	scores[0][1].display()
+	return scores[0][1]
