@@ -69,3 +69,15 @@ def exampleTree():
 			Node(addw, [ParamNode(1), ConstNode(5)]),
 			Node(subw, [ParamNode(1), ConstNode(2)]),
 		])
+
+def makeRandomTree(pc, maxDepth = 4, fpr = 0.5, ppr = 0.6):
+	if random() < fpr and maxDepth > 0:
+		f = choice(fList)
+		children = [makeRandomTree(pc, maxDepth - 1, fpr, ppr) for i in range(f.childCount)]
+
+		return Node(f, children)
+
+	elif random() < ppr:
+		return ParamNode(randint(0, pc - 1))
+	else:
+		return ConstNode(randint(0, 10))
