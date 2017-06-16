@@ -2,13 +2,13 @@ from random import random, randint, choice
 from copy import deepcopy
 from math import log
 
-class FuncWrapper:
+class FuncWrapper():
 	def __init__(self, function, childCount, name):
 		self.function = function
 		self.childCount = childCount
 		self.name = name
 
-class Node:
+class Node():
 	def __init__(self, fw, children):
 		self.function = fw.function
 		self.name = fw.name
@@ -19,11 +19,11 @@ class Node:
 		return self.function(results)
 
 	def display(self, indent = 0):
-		print ('  ' * indent) + self.name
+		print ('%s%s' % ('  ' * indent, self.name))
 		for c in self.children:
 			c.display(indent + 1)
 
-class ParamNode:
+class ParamNode():
 	def __init__(self, idx):
 		self.idx = idx
 
@@ -31,9 +31,9 @@ class ParamNode:
 		return inp[self.idx]
 
 	def display(self, indent = 0):
-		print '%sp%d' % ('  ' * indent, self.idx)
+		print ('%sp%d' % ('  ' * indent, self.idx))
 
-class ConstNode:
+class ConstNode():
 	def __init__(self, v):
 		self.v = v
 
@@ -41,7 +41,7 @@ class ConstNode:
 		return self.v
 
 	def display(self, indent = 0):
-		print '%s%d' % ('  ' * indent, self.v)
+		print ('%s%d' % ('  ' * indent, self.v))
 
 addw = FuncWrapper(lambda l : l[0] + l[1], 2, 'add')
 subw = FuncWrapper(lambda l : l[0] - l[1], 2, 'subtract')
@@ -99,3 +99,25 @@ def scoreFunction(tree, s):
 		v = tree.evaluate([data[0], data[1]])
 		dif += abs(v - data[2])
 	return dif
+
+def mutate(t, pc, prob = 0.1):
+	if random() < prob:
+		print('mutate!!!')
+		return makeRandomTree(pc)
+	else:
+		result = deepcopy(t)
+		if isinstance(t, Node):
+			result.children = [mutate(c, pc, prob) for c in t.children]
+		return result
+
+def crossover(t1, t2, prob = 0.7, top = 1):
+	r = random()
+	if r < prob and not top:
+		print ('crossover!!!')
+		return deepcopy(t2)
+	else:
+		result = deepcopy(t1)
+		if hasattr(t1,'children') and hasattr(t2,'children'):
+			result.children = [crossover(c, choice(t2.children), prob, 0) for c in t1.children]
+
+		return result
